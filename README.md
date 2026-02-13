@@ -1,6 +1,6 @@
 # .NET Study Material
 
-A collection of 20 self-contained C# console applications designed to help experienced engineers practice articulating fundamental programming concepts for interviews. Each project pairs runnable code examples with clear "interview answer" explanations.
+A collection of 30 self-contained C# console applications designed to help experienced engineers practice articulating fundamental programming concepts for interviews. Each project pairs runnable code examples with clear "interview answer" explanations.
 
 **Target Framework:** .NET 10 Preview (`net10.0`)
 
@@ -42,6 +42,16 @@ dotnet run --project src/01-Inheritance
 | 18 | [Records and Value Types](src/18-RecordsAndValueTypes/) | record vs struct vs class, value/reference equality, Span\<T\> |
 | 19 | [Pattern Matching](src/19-PatternMatching/) | Switch expressions, property/tuple/list patterns, exhaustiveness |
 | 20 | [Concurrency and Channels](src/20-ConcurrencyAndChannels/) | Channel\<T\>, producer/consumer, SemaphoreSlim, thread safety |
+| 21 | [Builder Pattern](src/21-BuilderPattern/) | Fluent API construction, step-by-step building, Director, validation |
+| 22 | [Prototype Pattern](src/22-PrototypePattern/) | Deep vs shallow copy, ICloneable, prototype registry, cloning complex objects |
+| 23 | [Adapter Pattern](src/23-AdapterPattern/) | Incompatible interface bridging, object adapter, legacy system integration |
+| 24 | [Decorator Pattern](src/24-DecoratorPattern/) | Stacking behaviors, wrapping objects, Open/Closed principle, stream-like pipelines |
+| 25 | [Facade Pattern](src/25-FacadePattern/) | Simplified interface to complex subsystems, coordinating multiple services |
+| 26 | [Composite Pattern](src/26-CompositePattern/) | Tree structures, uniform leaf/node treatment, recursive aggregation |
+| 27 | [Proxy Pattern](src/27-ProxyPattern/) | Caching proxy, access control proxy, logging proxy, lazy initialization |
+| 28 | [Command Pattern](src/28-CommandPattern/) | Encapsulated requests, undo/redo, command queue, macro commands |
+| 29 | [State Pattern](src/29-StatePattern/) | State-dependent behavior, finite state machines, explicit transitions |
+| 30 | [Template Method Pattern](src/30-TemplateMethodPattern/) | Algorithm skeleton in base class, hook methods, enforced structure |
 
 ## Prerequisites
 
