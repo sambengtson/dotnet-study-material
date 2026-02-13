@@ -43,6 +43,26 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "19-PatternMatching", "src\1
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "20-ConcurrencyAndChannels", "src\20-ConcurrencyAndChannels\20-ConcurrencyAndChannels.csproj", "{A1000020-0000-0000-0000-000000000020}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "21-BuilderPattern", "src\21-BuilderPattern\21-BuilderPattern.csproj", "{A1000021-0000-0000-0000-000000000021}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "22-PrototypePattern", "src\22-PrototypePattern\22-PrototypePattern.csproj", "{A1000022-0000-0000-0000-000000000022}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "23-AdapterPattern", "src\23-AdapterPattern\23-AdapterPattern.csproj", "{A1000023-0000-0000-0000-000000000023}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "24-DecoratorPattern", "src\24-DecoratorPattern\24-DecoratorPattern.csproj", "{A1000024-0000-0000-0000-000000000024}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "25-FacadePattern", "src\25-FacadePattern\25-FacadePattern.csproj", "{A1000025-0000-0000-0000-000000000025}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "26-CompositePattern", "src\26-CompositePattern\26-CompositePattern.csproj", "{A1000026-0000-0000-0000-000000000026}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "27-ProxyPattern", "src\27-ProxyPattern\27-ProxyPattern.csproj", "{A1000027-0000-0000-0000-000000000027}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "28-CommandPattern", "src\28-CommandPattern\28-CommandPattern.csproj", "{A1000028-0000-0000-0000-000000000028}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "29-StatePattern", "src\29-StatePattern\29-StatePattern.csproj", "{A1000029-0000-0000-0000-000000000029}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "30-TemplateMethodPattern", "src\30-TemplateMethodPattern\30-TemplateMethodPattern.csproj", "{A1000030-0000-0000-0000-000000000030}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -129,5 +149,45 @@ Global
 		{A1000020-0000-0000-0000-000000000020}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A1000020-0000-0000-0000-000000000020}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A1000020-0000-0000-0000-000000000020}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1000021-0000-0000-0000-000000000021}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1000021-0000-0000-0000-000000000021}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1000021-0000-0000-0000-000000000021}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1000021-0000-0000-0000-000000000021}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1000022-0000-0000-0000-000000000022}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1000022-0000-0000-0000-000000000022}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1000022-0000-0000-0000-000000000022}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1000022-0000-0000-0000-000000000022}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1000023-0000-0000-0000-000000000023}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1000023-0000-0000-0000-000000000023}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1000023-0000-0000-0000-000000000023}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1000023-0000-0000-0000-000000000023}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1000024-0000-0000-0000-000000000024}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1000024-0000-0000-0000-000000000024}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1000024-0000-0000-0000-000000000024}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1000024-0000-0000-0000-000000000024}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1000025-0000-0000-0000-000000000025}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1000025-0000-0000-0000-000000000025}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1000025-0000-0000-0000-000000000025}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1000025-0000-0000-0000-000000000025}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1000026-0000-0000-0000-000000000026}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1000026-0000-0000-0000-000000000026}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1000026-0000-0000-0000-000000000026}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1000026-0000-0000-0000-000000000026}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1000027-0000-0000-0000-000000000027}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1000027-0000-0000-0000-000000000027}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1000027-0000-0000-0000-000000000027}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1000027-0000-0000-0000-000000000027}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1000028-0000-0000-0000-000000000028}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1000028-0000-0000-0000-000000000028}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1000028-0000-0000-0000-000000000028}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1000028-0000-0000-0000-000000000028}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1000029-0000-0000-0000-000000000029}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1000029-0000-0000-0000-000000000029}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1000029-0000-0000-0000-000000000029}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1000029-0000-0000-0000-000000000029}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1000030-0000-0000-0000-000000000030}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1000030-0000-0000-0000-000000000030}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1000030-0000-0000-0000-000000000030}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1000030-0000-0000-0000-000000000030}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
