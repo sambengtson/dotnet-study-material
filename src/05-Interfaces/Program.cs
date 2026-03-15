@@ -9,6 +9,98 @@
 // an interface without breaking existing implementors.
 // ============================================================================
 
+// ============================================================================
+// DEMO
+// ============================================================================
+
+Console.WriteLine("=== INTERFACES DEMO ===\n");
+
+// --- Multiple Interface Implementation ---
+Console.WriteLine("--- Multiple Interface Implementation ---");
+INotificationSender[] senders = [new EmailSender(), new SmsSender()];
+
+foreach (var sender in senders)
+{
+    Console.WriteLine($"Provider: {sender.ProviderName}");
+    await sender.SendAsync("user@test.com", "Your order has shipped!");
+
+    // Check if this sender also implements IHealthCheck
+    if (sender is IHealthCheck healthCheck)
+    {
+        var status = await healthCheck.CheckHealthAsync();
+        Console.WriteLine($"  Health: {(status.IsHealthy ? "OK" : "FAIL")} — {status.Details}");
+    }
+    Console.WriteLine();
+}
+
+// --- Default Interface Methods ---
+Console.WriteLine("--- Default Interface Methods ---");
+IMessageFormatter emailFormatter = new EmailSender();
+IMessageFormatter smsFormatter = new SmsSender();
+
+Console.WriteLine($"  Email format: {emailFormatter.Format("Hello")}");
+Console.WriteLine($"  Email with timestamp: {emailFormatter.FormatWithTimestamp("Hello")}");
+Console.WriteLine($"  SMS format: {smsFormatter.Format("Hello")}");
+Console.WriteLine($"  SMS with timestamp: {smsFormatter.FormatWithTimestamp("Hello")}");
+
+// Batch formatting uses the default implementation for both
+string[] messages = ["Order confirmed", "Payment received", "Shipping soon"];
+Console.WriteLine($"\n  Email batch:\n{emailFormatter.FormatBatch(messages)}");
+Console.WriteLine();
+
+// --- Explicit Interface Implementation ---
+Console.WriteLine("--- Explicit Interface Implementation ---");
+var dataService = new DataService();
+
+// Through the class reference — only GetSummary is visible
+Console.WriteLine($"  Class: {dataService.GetSummary()}");
+// dataService.GetData(); // Won't compile — GetData is explicit
+
+// Through interface references — each sees its own GetData
+IPublicApi publicApi = dataService;
+IInternalApi internalApi = dataService;
+Console.WriteLine($"  IPublicApi: {publicApi.GetData()}");
+Console.WriteLine($"  IInternalApi: {internalApi.GetData()}");
+Console.WriteLine();
+
+// --- IDisposable ---
+Console.WriteLine("--- IDisposable / using ---");
+using (var db = new DatabaseConnection("Server=localhost;DB=myapp"))
+{
+    var result = db.Query("SELECT * FROM Users");
+    Console.WriteLine($"  {result}");
+} // Dispose called automatically here
+
+Console.WriteLine();
+
+// Using declaration (C# 8) — disposes when the variable goes out of scope
+Console.WriteLine("--- Using declaration (C# 8) ---");
+{
+    using var db2 = new DatabaseConnection("Server=localhost;DB=analytics");
+    Console.WriteLine($"  {db2.Query("SELECT COUNT(*) FROM Events")}");
+} // db2.Dispose() called here
+Console.WriteLine();
+
+// --- Generic Interface (IRepository<T>) ---
+Console.WriteLine("--- Generic Interface: IRepository<User> ---");
+IRepository<User> repo = new InMemoryUserRepository();
+
+await repo.SaveAsync(new User("1", "Alice", "alice@test.com"));
+await repo.SaveAsync(new User("2", "Bob", "bob@test.com"));
+await repo.SaveAsync(new User("3", "Charlie", "charlie@test.com"));
+
+var user = await repo.GetByIdAsync("2");
+Console.WriteLine($"  Found: {user}");
+
+var all = await repo.GetAllAsync();
+Console.WriteLine($"  Total users: {all.Count}");
+foreach (var u in all)
+    Console.WriteLine($"    {u}");
+
+await repo.DeleteAsync("2");
+var afterDelete = await repo.GetAllAsync();
+Console.WriteLine($"  After delete: {afterDelete.Count} users");
+
 // --- Core interfaces for a notification system ---
 
 // INTERVIEW ANSWER: Interfaces are pure contracts. They say WHAT a type can do
@@ -206,95 +298,3 @@ public class InMemoryUserRepository : IRepository<User>
         return Task.CompletedTask;
     }
 }
-
-// ============================================================================
-// DEMO
-// ============================================================================
-
-Console.WriteLine("=== INTERFACES DEMO ===\n");
-
-// --- Multiple Interface Implementation ---
-Console.WriteLine("--- Multiple Interface Implementation ---");
-INotificationSender[] senders = [new EmailSender(), new SmsSender()];
-
-foreach (var sender in senders)
-{
-    Console.WriteLine($"Provider: {sender.ProviderName}");
-    await sender.SendAsync("user@test.com", "Your order has shipped!");
-
-    // Check if this sender also implements IHealthCheck
-    if (sender is IHealthCheck healthCheck)
-    {
-        var status = await healthCheck.CheckHealthAsync();
-        Console.WriteLine($"  Health: {(status.IsHealthy ? "OK" : "FAIL")} — {status.Details}");
-    }
-    Console.WriteLine();
-}
-
-// --- Default Interface Methods ---
-Console.WriteLine("--- Default Interface Methods ---");
-IMessageFormatter emailFormatter = new EmailSender();
-IMessageFormatter smsFormatter = new SmsSender();
-
-Console.WriteLine($"  Email format: {emailFormatter.Format("Hello")}");
-Console.WriteLine($"  Email with timestamp: {emailFormatter.FormatWithTimestamp("Hello")}");
-Console.WriteLine($"  SMS format: {smsFormatter.Format("Hello")}");
-Console.WriteLine($"  SMS with timestamp: {smsFormatter.FormatWithTimestamp("Hello")}");
-
-// Batch formatting uses the default implementation for both
-string[] messages = ["Order confirmed", "Payment received", "Shipping soon"];
-Console.WriteLine($"\n  Email batch:\n{emailFormatter.FormatBatch(messages)}");
-Console.WriteLine();
-
-// --- Explicit Interface Implementation ---
-Console.WriteLine("--- Explicit Interface Implementation ---");
-var dataService = new DataService();
-
-// Through the class reference — only GetSummary is visible
-Console.WriteLine($"  Class: {dataService.GetSummary()}");
-// dataService.GetData(); // Won't compile — GetData is explicit
-
-// Through interface references — each sees its own GetData
-IPublicApi publicApi = dataService;
-IInternalApi internalApi = dataService;
-Console.WriteLine($"  IPublicApi: {publicApi.GetData()}");
-Console.WriteLine($"  IInternalApi: {internalApi.GetData()}");
-Console.WriteLine();
-
-// --- IDisposable ---
-Console.WriteLine("--- IDisposable / using ---");
-using (var db = new DatabaseConnection("Server=localhost;DB=myapp"))
-{
-    var result = db.Query("SELECT * FROM Users");
-    Console.WriteLine($"  {result}");
-} // Dispose called automatically here
-
-Console.WriteLine();
-
-// Using declaration (C# 8) — disposes when the variable goes out of scope
-Console.WriteLine("--- Using declaration (C# 8) ---");
-{
-    using var db2 = new DatabaseConnection("Server=localhost;DB=analytics");
-    Console.WriteLine($"  {db2.Query("SELECT COUNT(*) FROM Events")}");
-} // db2.Dispose() called here
-Console.WriteLine();
-
-// --- Generic Interface (IRepository<T>) ---
-Console.WriteLine("--- Generic Interface: IRepository<User> ---");
-IRepository<User> repo = new InMemoryUserRepository();
-
-await repo.SaveAsync(new User("1", "Alice", "alice@test.com"));
-await repo.SaveAsync(new User("2", "Bob", "bob@test.com"));
-await repo.SaveAsync(new User("3", "Charlie", "charlie@test.com"));
-
-var user = await repo.GetByIdAsync("2");
-Console.WriteLine($"  Found: {user}");
-
-var all = await repo.GetAllAsync();
-Console.WriteLine($"  Total users: {all.Count}");
-foreach (var u in all)
-    Console.WriteLine($"    {u}");
-
-await repo.DeleteAsync("2");
-var afterDelete = await repo.GetAllAsync();
-Console.WriteLine($"  After delete: {afterDelete.Count} users");

@@ -10,6 +10,114 @@
 // can be used while enabling you to call methods on T.
 // ============================================================================
 
+// ============================================================================
+// DEMO
+// ============================================================================
+
+Console.WriteLine("=== GENERICS DEMO ===\n");
+
+// --- Result<T> Pattern ---
+Console.WriteLine("--- Result<T> Pattern ---");
+
+Result<int> ParseId(string input)
+{
+    if (int.TryParse(input, out var id) && id > 0)
+        return Result<int>.Success(id);
+    return Result<int>.Failure($"'{input}' is not a valid positive integer ID");
+}
+
+var good = ParseId("42");
+var bad = ParseId("nope");
+Console.WriteLine($"  Parse '42': {good}");
+Console.WriteLine($"  Parse 'nope': {bad}");
+
+// Map transforms the value inside Result
+var doubled = good.Map(id => id * 2);
+var failedMap = bad.Map(id => id * 2);
+Console.WriteLine($"  Mapped (42 * 2): {doubled}");
+Console.WriteLine($"  Mapped (failure): {failedMap}");
+Console.WriteLine();
+
+// --- Generic Class with Constraints ---
+Console.WriteLine("--- SortedCache<TKey, TValue> ---");
+var cache = new SortedCache<int, string>(3);
+cache.Add(3, "Three");
+cache.Add(1, "One");
+cache.Add(2, "Two");
+Console.WriteLine("  After adding 3 items:");
+foreach (var (key, value) in cache.GetAll())
+    Console.WriteLine($"    [{key}] = {value}");
+
+cache.Add(4, "Four"); // Should evict key 1 (smallest)
+Console.WriteLine("  After adding 4th item (max size = 3):");
+foreach (var (key, value) in cache.GetAll())
+    Console.WriteLine($"    [{key}] = {value}");
+Console.WriteLine();
+
+// --- Generic Methods ---
+Console.WriteLine("--- Generic Methods ---");
+string[] names = ["Alice", "Bob", "Charlie", "Diana"];
+var found = CollectionHelpers.FindOrDefault(names, n => n.StartsWith("Ch"));
+Console.WriteLine($"  FindOrDefault (starts with 'Ch'): {found}");
+
+var orders = new[]
+{
+    new { Customer = "Alice", Amount = 100m, Region = "US" },
+    new { Customer = "Bob", Amount = 200m, Region = "EU" },
+    new { Customer = "Alice", Amount = 150m, Region = "US" },
+    new { Customer = "Charlie", Amount = 300m, Region = "EU" },
+};
+
+var grouped = CollectionHelpers.GroupToDictionary(orders, o => o.Region, o => $"{o.Customer}: {o.Amount:C}");
+Console.WriteLine("  Grouped by Region:");
+foreach (var (region, items) in grouped)
+{
+    Console.WriteLine($"    {region}: [{string.Join(", ", items)}]");
+}
+Console.WriteLine();
+
+// --- Covariance and Contravariance ---
+Console.WriteLine("--- Covariance (out T) ---");
+IEventProducer<SecurityEvent> securityProducer = new SecurityEventProducer();
+
+// INTERVIEW ANSWER: This works because IEventProducer is covariant (out T).
+// SecurityEvent derives from AuditEvent, and the producer only outputs events,
+// so it's safe to treat IEventProducer<SecurityEvent> as IEventProducer<AuditEvent>.
+IEventProducer<AuditEvent> auditProducer = securityProducer; // Covariance!
+
+var events = auditProducer.ProduceBatch(3);
+foreach (var evt in events)
+    Console.WriteLine($"  Produced: {evt}");
+Console.WriteLine();
+
+Console.WriteLine("--- Contravariance (in T) ---");
+IEventConsumer<AuditEvent> auditConsumer = new AuditEventConsumer();
+
+// INTERVIEW ANSWER: This works because IEventConsumer is contravariant (in T).
+// A consumer of AuditEvent can handle SecurityEvent (which IS an AuditEvent),
+// so it's safe to treat IEventConsumer<AuditEvent> as IEventConsumer<SecurityEvent>.
+IEventConsumer<SecurityEvent> securityConsumer = auditConsumer; // Contravariance!
+
+securityConsumer.Consume(new SecurityEvent("Login", "Failed attempt", DateTime.UtcNow, "Critical"));
+Console.WriteLine();
+
+// --- Validator ---
+Console.WriteLine("--- Generic Validator ---");
+IValidator<OrderRequest> validator = new OrderValidator();
+
+OrderRequest[] requests =
+[
+    new("cust-1", 99.99m, "USD"),
+    new("", -10m, "X"),
+    new("cust-2", 50m, "EUR"),
+];
+
+foreach (var req in requests)
+{
+    var result = validator.Validate(req);
+    Console.WriteLine($"  {req} → {(result.IsValid ? "Valid" : $"Invalid: [{string.Join(", ", result.Errors)}]")}");
+}
+
 // --- Generic Result<T> Pattern ---
 
 // INTERVIEW ANSWER: The Result<T> pattern is an alternative to exceptions for
@@ -178,112 +286,4 @@ public class OrderValidator : IValidator<OrderRequest>
         if (item.Currency.Length != 3) errors.Add("Currency must be 3-letter code");
         return errors.Count > 0 ? ValidationResult.Fail([.. errors]) : ValidationResult.Ok();
     }
-}
-
-// ============================================================================
-// DEMO
-// ============================================================================
-
-Console.WriteLine("=== GENERICS DEMO ===\n");
-
-// --- Result<T> Pattern ---
-Console.WriteLine("--- Result<T> Pattern ---");
-
-Result<int> ParseId(string input)
-{
-    if (int.TryParse(input, out var id) && id > 0)
-        return Result<int>.Success(id);
-    return Result<int>.Failure($"'{input}' is not a valid positive integer ID");
-}
-
-var good = ParseId("42");
-var bad = ParseId("nope");
-Console.WriteLine($"  Parse '42': {good}");
-Console.WriteLine($"  Parse 'nope': {bad}");
-
-// Map transforms the value inside Result
-var doubled = good.Map(id => id * 2);
-var failedMap = bad.Map(id => id * 2);
-Console.WriteLine($"  Mapped (42 * 2): {doubled}");
-Console.WriteLine($"  Mapped (failure): {failedMap}");
-Console.WriteLine();
-
-// --- Generic Class with Constraints ---
-Console.WriteLine("--- SortedCache<TKey, TValue> ---");
-var cache = new SortedCache<int, string>(3);
-cache.Add(3, "Three");
-cache.Add(1, "One");
-cache.Add(2, "Two");
-Console.WriteLine("  After adding 3 items:");
-foreach (var (key, value) in cache.GetAll())
-    Console.WriteLine($"    [{key}] = {value}");
-
-cache.Add(4, "Four"); // Should evict key 1 (smallest)
-Console.WriteLine("  After adding 4th item (max size = 3):");
-foreach (var (key, value) in cache.GetAll())
-    Console.WriteLine($"    [{key}] = {value}");
-Console.WriteLine();
-
-// --- Generic Methods ---
-Console.WriteLine("--- Generic Methods ---");
-string[] names = ["Alice", "Bob", "Charlie", "Diana"];
-var found = CollectionHelpers.FindOrDefault(names, n => n.StartsWith("Ch"));
-Console.WriteLine($"  FindOrDefault (starts with 'Ch'): {found}");
-
-var orders = new[]
-{
-    new { Customer = "Alice", Amount = 100m, Region = "US" },
-    new { Customer = "Bob", Amount = 200m, Region = "EU" },
-    new { Customer = "Alice", Amount = 150m, Region = "US" },
-    new { Customer = "Charlie", Amount = 300m, Region = "EU" },
-};
-
-var grouped = CollectionHelpers.GroupToDictionary(orders, o => o.Region, o => $"{o.Customer}: {o.Amount:C}");
-Console.WriteLine("  Grouped by Region:");
-foreach (var (region, items) in grouped)
-{
-    Console.WriteLine($"    {region}: [{string.Join(", ", items)}]");
-}
-Console.WriteLine();
-
-// --- Covariance and Contravariance ---
-Console.WriteLine("--- Covariance (out T) ---");
-IEventProducer<SecurityEvent> securityProducer = new SecurityEventProducer();
-
-// INTERVIEW ANSWER: This works because IEventProducer is covariant (out T).
-// SecurityEvent derives from AuditEvent, and the producer only outputs events,
-// so it's safe to treat IEventProducer<SecurityEvent> as IEventProducer<AuditEvent>.
-IEventProducer<AuditEvent> auditProducer = securityProducer; // Covariance!
-
-var events = auditProducer.ProduceBatch(3);
-foreach (var evt in events)
-    Console.WriteLine($"  Produced: {evt}");
-Console.WriteLine();
-
-Console.WriteLine("--- Contravariance (in T) ---");
-IEventConsumer<AuditEvent> auditConsumer = new AuditEventConsumer();
-
-// INTERVIEW ANSWER: This works because IEventConsumer is contravariant (in T).
-// A consumer of AuditEvent can handle SecurityEvent (which IS an AuditEvent),
-// so it's safe to treat IEventConsumer<AuditEvent> as IEventConsumer<SecurityEvent>.
-IEventConsumer<SecurityEvent> securityConsumer = auditConsumer; // Contravariance!
-
-securityConsumer.Consume(new SecurityEvent("Login", "Failed attempt", DateTime.UtcNow, "Critical"));
-Console.WriteLine();
-
-// --- Validator ---
-Console.WriteLine("--- Generic Validator ---");
-IValidator<OrderRequest> validator = new OrderValidator();
-
-OrderRequest[] requests =
-[
-    new("cust-1", 99.99m, "USD"),
-    new("", -10m, "X"),
-    new("cust-2", 50m, "EUR"),
-];
-
-foreach (var req in requests)
-{
-    var result = validator.Validate(req);
-    Console.WriteLine($"  {req} → {(result.IsValid ? "Valid" : $"Invalid: [{string.Join(", ", result.Errors)}]")}");
 }

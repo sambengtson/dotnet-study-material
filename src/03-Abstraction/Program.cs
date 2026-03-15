@@ -10,6 +10,45 @@
 // and reason about.
 // ============================================================================
 
+// ============================================================================
+// DEMO
+// ============================================================================
+
+Console.WriteLine("=== ABSTRACTION DEMO ===\n");
+
+// Same service, different cache implementations
+CacheProvider[] caches = [new InMemoryCache(), new FileSystemCache()];
+
+foreach (var cache in caches)
+{
+    Console.WriteLine($"--- Using {cache.ProviderName} Cache ---");
+    var service = new UserProfileService(cache);
+
+    // First fetch — cache miss, loads from "database"
+    var profile1 = await service.GetProfileAsync("user-42");
+    Console.WriteLine($"  Profile: {profile1}");
+
+    // Second fetch — cache hit
+    var profile2 = await service.GetProfileAsync("user-42");
+    Console.WriteLine($"  Profile: {profile2}");
+
+    // Another user — cache miss
+    await service.GetProfileAsync("user-99");
+
+    // Invalidate and re-fetch
+    await service.InvalidateProfileAsync("user-42");
+    await service.GetProfileAsync("user-42");
+
+    // Stats
+    Console.WriteLine($"  Stats: {cache.GetStats()}");
+    Console.WriteLine();
+}
+
+// INTERVIEW ANSWER: Notice how the demo code above treats InMemoryCache and
+// FileSystemCache identically through the CacheProvider abstraction. The
+// UserProfileService was written once and works with both — that's abstraction
+// in action. If we added a RedisCache tomorrow, zero changes to UserProfileService.
+
 // INTERVIEW ANSWER: Abstract classes are useful when you have shared behavior
 // across related types. Unlike interfaces, they can hold state and provide
 // implemented methods. The abstract members define the "holes" that each
@@ -151,42 +190,3 @@ public class UserProfileService(CacheProvider cache)
         await cache.RemoveAsync($"profile:{userId}");
     }
 }
-
-// ============================================================================
-// DEMO
-// ============================================================================
-
-Console.WriteLine("=== ABSTRACTION DEMO ===\n");
-
-// Same service, different cache implementations
-CacheProvider[] caches = [new InMemoryCache(), new FileSystemCache()];
-
-foreach (var cache in caches)
-{
-    Console.WriteLine($"--- Using {cache.ProviderName} Cache ---");
-    var service = new UserProfileService(cache);
-
-    // First fetch — cache miss, loads from "database"
-    var profile1 = await service.GetProfileAsync("user-42");
-    Console.WriteLine($"  Profile: {profile1}");
-
-    // Second fetch — cache hit
-    var profile2 = await service.GetProfileAsync("user-42");
-    Console.WriteLine($"  Profile: {profile2}");
-
-    // Another user — cache miss
-    await service.GetProfileAsync("user-99");
-
-    // Invalidate and re-fetch
-    await service.InvalidateProfileAsync("user-42");
-    await service.GetProfileAsync("user-42");
-
-    // Stats
-    Console.WriteLine($"  Stats: {cache.GetStats()}");
-    Console.WriteLine();
-}
-
-// INTERVIEW ANSWER: Notice how the demo code above treats InMemoryCache and
-// FileSystemCache identically through the CacheProvider abstraction. The
-// UserProfileService was written once and works with both — that's abstraction
-// in action. If we added a RedisCache tomorrow, zero changes to UserProfileService.

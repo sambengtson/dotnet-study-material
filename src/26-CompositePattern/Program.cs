@@ -11,6 +11,76 @@
 // parts and wholes the same way.
 // ============================================================================
 
+// ============================================================================
+// DEMO
+// ============================================================================
+
+Console.WriteLine("=== COMPOSITE PATTERN DEMO ===\n");
+
+// --- File system tree ---
+Console.WriteLine("--- File System Tree ---");
+
+var root = new Directory("project")
+    .Add(new File("README.md", 2_400))
+    .Add(new File(".gitignore", 350))
+    .Add(new Directory("src")
+        .Add(new File("Program.cs", 8_500))
+        .Add(new File("Startup.cs", 3_200))
+        .Add(new Directory("Models")
+            .Add(new File("User.cs", 1_200))
+            .Add(new File("Order.cs", 2_100))
+            .Add(new File("Product.cs", 1_800)))
+        .Add(new Directory("Services")
+            .Add(new File("UserService.cs", 4_500))
+            .Add(new File("OrderService.cs", 6_200))))
+    .Add(new Directory("tests")
+        .Add(new File("UserTests.cs", 5_400))
+        .Add(new File("OrderTests.cs", 4_800)));
+
+root.Display();
+
+// --- Uniform operations on any node ---
+Console.WriteLine("\n--- Uniform Operations ---");
+Console.WriteLine("\nEntire project:");
+FileSystemOperations.PrintSummary(root);
+
+// Same method works on a subdirectory
+var srcDir = new Directory("src")
+    .Add(new File("App.cs", 3_000))
+    .Add(new File("Config.cs", 1_500));
+
+Console.WriteLine("\nJust src/:");
+FileSystemOperations.PrintSummary(srcDir);
+
+// Same method works on a single file
+Console.WriteLine("\nSingle file:");
+FileSystemOperations.PrintSummary(new File("data.json", 15_000));
+
+// --- Organization hierarchy ---
+Console.WriteLine("\n--- Organization Hierarchy ---");
+
+var company = new Department("Acme Corp")
+    .Add(new Department("Engineering")
+        .Add(new Department("Backend")
+            .Add(new Employee("Alice", "Staff Engineer", 180_000))
+            .Add(new Employee("Bob", "Senior Engineer", 155_000))
+            .Add(new Employee("Carol", "Engineer", 120_000)))
+        .Add(new Department("Frontend")
+            .Add(new Employee("Dave", "Lead Engineer", 165_000))
+            .Add(new Employee("Eve", "Engineer", 125_000))))
+    .Add(new Department("Product")
+        .Add(new Employee("Frank", "VP Product", 200_000))
+        .Add(new Employee("Grace", "Product Manager", 140_000)))
+    .Add(new Department("Sales")
+        .Add(new Employee("Heidi", "Sales Director", 160_000))
+        .Add(new Employee("Ivan", "Account Exec", 110_000))
+        .Add(new Employee("Judy", "Account Exec", 105_000)));
+
+company.Print();
+
+Console.WriteLine($"\n  Company headcount: {company.GetHeadcount()}");
+Console.WriteLine($"  Total budget: {company.GetTotalBudget():C0}");
+
 // --- Component interface ---
 
 // INTERVIEW ANSWER: The component interface declares operations that make sense
@@ -161,73 +231,3 @@ public static class FileSystemOperations
         Console.WriteLine($"  Total Files: {entry.CountFiles()}");
     }
 }
-
-// ============================================================================
-// DEMO
-// ============================================================================
-
-Console.WriteLine("=== COMPOSITE PATTERN DEMO ===\n");
-
-// --- File system tree ---
-Console.WriteLine("--- File System Tree ---");
-
-var root = new Directory("project")
-    .Add(new File("README.md", 2_400))
-    .Add(new File(".gitignore", 350))
-    .Add(new Directory("src")
-        .Add(new File("Program.cs", 8_500))
-        .Add(new File("Startup.cs", 3_200))
-        .Add(new Directory("Models")
-            .Add(new File("User.cs", 1_200))
-            .Add(new File("Order.cs", 2_100))
-            .Add(new File("Product.cs", 1_800)))
-        .Add(new Directory("Services")
-            .Add(new File("UserService.cs", 4_500))
-            .Add(new File("OrderService.cs", 6_200))))
-    .Add(new Directory("tests")
-        .Add(new File("UserTests.cs", 5_400))
-        .Add(new File("OrderTests.cs", 4_800)));
-
-root.Display();
-
-// --- Uniform operations on any node ---
-Console.WriteLine("\n--- Uniform Operations ---");
-Console.WriteLine("\nEntire project:");
-FileSystemOperations.PrintSummary(root);
-
-// Same method works on a subdirectory
-var srcDir = new Directory("src")
-    .Add(new File("App.cs", 3_000))
-    .Add(new File("Config.cs", 1_500));
-
-Console.WriteLine("\nJust src/:");
-FileSystemOperations.PrintSummary(srcDir);
-
-// Same method works on a single file
-Console.WriteLine("\nSingle file:");
-FileSystemOperations.PrintSummary(new File("data.json", 15_000));
-
-// --- Organization hierarchy ---
-Console.WriteLine("\n--- Organization Hierarchy ---");
-
-var company = new Department("Acme Corp")
-    .Add(new Department("Engineering")
-        .Add(new Department("Backend")
-            .Add(new Employee("Alice", "Staff Engineer", 180_000))
-            .Add(new Employee("Bob", "Senior Engineer", 155_000))
-            .Add(new Employee("Carol", "Engineer", 120_000)))
-        .Add(new Department("Frontend")
-            .Add(new Employee("Dave", "Lead Engineer", 165_000))
-            .Add(new Employee("Eve", "Engineer", 125_000))))
-    .Add(new Department("Product")
-        .Add(new Employee("Frank", "VP Product", 200_000))
-        .Add(new Employee("Grace", "Product Manager", 140_000)))
-    .Add(new Department("Sales")
-        .Add(new Employee("Heidi", "Sales Director", 160_000))
-        .Add(new Employee("Ivan", "Account Exec", 110_000))
-        .Add(new Employee("Judy", "Account Exec", 105_000)));
-
-company.Print();
-
-Console.WriteLine($"\n  Company headcount: {company.GetHeadcount()}");
-Console.WriteLine($"  Total budget: {company.GetTotalBudget():C0}");

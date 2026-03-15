@@ -12,106 +12,6 @@
 
 using System.Runtime.ExceptionServices;
 
-// --- Custom Exception Hierarchy ---
-
-// INTERVIEW ANSWER: Custom exceptions should have a meaningful name that describes
-// the problem, include relevant context as properties, and always include the
-// standard constructors (message, inner exception). Derive from Exception directly
-// — ApplicationException is a .NET 1.0 relic that adds no value.
-public class ApiException : Exception
-{
-    public int StatusCode { get; }
-    public string? RequestId { get; }
-
-    public ApiException(string message, int statusCode, string? requestId = null, Exception? inner = null)
-        : base(message, inner)
-    {
-        StatusCode = statusCode;
-        RequestId = requestId;
-    }
-}
-
-public class RateLimitException : ApiException
-{
-    public TimeSpan RetryAfter { get; }
-
-    public RateLimitException(TimeSpan retryAfter, string? requestId = null)
-        : base($"Rate limited. Retry after {retryAfter.TotalSeconds}s", 429, requestId)
-    {
-        RetryAfter = retryAfter;
-    }
-}
-
-public class NotFoundException : ApiException
-{
-    public string ResourceType { get; }
-    public string ResourceId { get; }
-
-    public NotFoundException(string resourceType, string resourceId)
-        : base($"{resourceType} '{resourceId}' not found", 404)
-    {
-        ResourceType = resourceType;
-        ResourceId = resourceId;
-    }
-}
-
-// --- Simulated API Client ---
-
-public class ApiClient
-{
-    private int _requestCount;
-
-    public async Task<string> GetResourceAsync(string resourceId)
-    {
-        _requestCount++;
-        var requestId = $"req-{_requestCount:D3}";
-
-        await Task.Delay(10);
-
-        return resourceId switch
-        {
-            "rate-limited" => throw new RateLimitException(TimeSpan.FromSeconds(30), requestId),
-            "not-found" => throw new NotFoundException("User", resourceId),
-            "server-error" => throw new ApiException("Internal server error", 500, requestId),
-            "timeout" => throw new TimeoutException("Request timed out"),
-            _ => $"{{\"id\":\"{resourceId}\",\"data\":\"OK\",\"requestId\":\"{requestId}\"}}"
-        };
-    }
-}
-
-// --- Result<T> Alternative ---
-
-// INTERVIEW ANSWER: For expected failures (like validation errors or "not found"),
-// a Result type is often better than exceptions. Exceptions have overhead from
-// stack unwinding and should be for truly unexpected situations. Result makes
-// the failure case explicit in the type system — the caller MUST handle it.
-public class Result<T>
-{
-    public T? Value { get; }
-    public string? Error { get; }
-    public bool IsSuccess { get; }
-
-    private Result(T value) { Value = value; IsSuccess = true; }
-    private Result(string error) { Error = error; IsSuccess = false; }
-
-    public static Result<T> Ok(T value) => new(value);
-    public static Result<T> Fail(string error) => new(error);
-}
-
-public class UserValidator
-{
-    public Result<string> ValidateEmail(string email)
-    {
-        if (string.IsNullOrWhiteSpace(email))
-            return Result<string>.Fail("Email is required");
-        if (!email.Contains('@'))
-            return Result<string>.Fail("Email must contain @");
-        if (email.Length > 254)
-            return Result<string>.Fail("Email too long");
-        return Result<string>.Ok(email.ToLowerInvariant());
-    }
-}
-
 // ============================================================================
 // DEMO
 // ============================================================================
@@ -253,3 +153,103 @@ Console.WriteLine("  INTERVIEW ANSWER: Use exceptions for truly unexpected failu
 Console.WriteLine("  (network errors, corrupt data, bugs). Use Result<T> for expected");
 Console.WriteLine("  failures (validation, not-found, business rules). Exceptions have");
 Console.WriteLine("  real perf cost from stack unwinding — don't use them for control flow.");
+
+// --- Custom Exception Hierarchy ---
+
+// INTERVIEW ANSWER: Custom exceptions should have a meaningful name that describes
+// the problem, include relevant context as properties, and always include the
+// standard constructors (message, inner exception). Derive from Exception directly
+// — ApplicationException is a .NET 1.0 relic that adds no value.
+public class ApiException : Exception
+{
+    public int StatusCode { get; }
+    public string? RequestId { get; }
+
+    public ApiException(string message, int statusCode, string? requestId = null, Exception? inner = null)
+        : base(message, inner)
+    {
+        StatusCode = statusCode;
+        RequestId = requestId;
+    }
+}
+
+public class RateLimitException : ApiException
+{
+    public TimeSpan RetryAfter { get; }
+
+    public RateLimitException(TimeSpan retryAfter, string? requestId = null)
+        : base($"Rate limited. Retry after {retryAfter.TotalSeconds}s", 429, requestId)
+    {
+        RetryAfter = retryAfter;
+    }
+}
+
+public class NotFoundException : ApiException
+{
+    public string ResourceType { get; }
+    public string ResourceId { get; }
+
+    public NotFoundException(string resourceType, string resourceId)
+        : base($"{resourceType} '{resourceId}' not found", 404)
+    {
+        ResourceType = resourceType;
+        ResourceId = resourceId;
+    }
+}
+
+// --- Simulated API Client ---
+
+public class ApiClient
+{
+    private int _requestCount;
+
+    public async Task<string> GetResourceAsync(string resourceId)
+    {
+        _requestCount++;
+        var requestId = $"req-{_requestCount:D3}";
+
+        await Task.Delay(10);
+
+        return resourceId switch
+        {
+            "rate-limited" => throw new RateLimitException(TimeSpan.FromSeconds(30), requestId),
+            "not-found" => throw new NotFoundException("User", resourceId),
+            "server-error" => throw new ApiException("Internal server error", 500, requestId),
+            "timeout" => throw new TimeoutException("Request timed out"),
+            _ => $"{{\"id\":\"{resourceId}\",\"data\":\"OK\",\"requestId\":\"{requestId}\"}}"
+        };
+    }
+}
+
+// --- Result<T> Alternative ---
+
+// INTERVIEW ANSWER: For expected failures (like validation errors or "not found"),
+// a Result type is often better than exceptions. Exceptions have overhead from
+// stack unwinding and should be for truly unexpected situations. Result makes
+// the failure case explicit in the type system — the caller MUST handle it.
+public class Result<T>
+{
+    public T? Value { get; }
+    public string? Error { get; }
+    public bool IsSuccess { get; }
+
+    private Result(T value) { Value = value; IsSuccess = true; }
+    private Result(string error) { Error = error; IsSuccess = false; }
+
+    public static Result<T> Ok(T value) => new(value);
+    public static Result<T> Fail(string error) => new(error);
+}
+
+public class UserValidator
+{
+    public Result<string> ValidateEmail(string email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+            return Result<string>.Fail("Email is required");
+        if (!email.Contains('@'))
+            return Result<string>.Fail("Email must contain @");
+        if (email.Length > 254)
+            return Result<string>.Fail("Email too long");
+        return Result<string>.Ok(email.ToLowerInvariant());
+    }
+}

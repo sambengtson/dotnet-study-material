@@ -11,6 +11,69 @@
 // the better approach.
 // ============================================================================
 
+// ============================================================================
+// DEMO
+// ============================================================================
+
+Console.WriteLine("=== SINGLETON PATTERN DEMO ===\n");
+
+// --- Approach 1: Static readonly ---
+Console.WriteLine("--- Approach 1: Static Readonly ---");
+var config1 = AppConfiguration.Instance;
+var config2 = AppConfiguration.Instance;
+Console.WriteLine($"  Same instance? {ReferenceEquals(config1, config2)}");
+Console.WriteLine($"  AppName: {config1.Get("AppName")}");
+Console.WriteLine($"  Version: {config1.Get("Version")}");
+Console.WriteLine();
+
+// --- Approach 2: Lazy<T> ---
+Console.WriteLine("--- Approach 2: Lazy<T> ---");
+var pool1 = ConnectionPool.Instance;
+var pool2 = ConnectionPool.Instance;
+Console.WriteLine($"  Same instance? {ReferenceEquals(pool1, pool2)}");
+var conn1 = pool1.AcquireConnection();
+var conn2 = pool1.AcquireConnection();
+Console.WriteLine($"  Acquired: {conn1}, {conn2}");
+Console.WriteLine($"  Active connections: {pool1.ActiveConnections}");
+Console.WriteLine();
+
+// --- Approach 3: Double-checked locking ---
+Console.WriteLine("--- Approach 3: Double-Checked Locking ---");
+var log1 = Logger.Instance;
+var log2 = Logger.Instance;
+Console.WriteLine($"  Same instance? {ReferenceEquals(log1, log2)}");
+log1.Log("Application started");
+log2.Log("Processing request"); // Same instance, same list
+Console.WriteLine($"  Entries ({log1.GetEntries().Count}):");
+foreach (var entry in log1.GetEntries())
+    Console.WriteLine($"    {entry}");
+Console.WriteLine();
+
+// --- Thread safety test ---
+Console.WriteLine("--- Thread Safety Test (Lazy<T>) ---");
+var tasks = Enumerable.Range(0, 10).Select(_ =>
+    Task.Run(() => ConnectionPool.Instance.AcquireConnection()));
+
+var connections = await Task.WhenAll(tasks);
+Console.WriteLine($"  All 10 threads got connections from same pool.");
+Console.WriteLine($"  Total active: {ConnectionPool.Instance.ActiveConnections}");
+Console.WriteLine();
+
+// --- Better Alternative: DI ---
+Console.WriteLine("--- Better Alternative: Dependency Injection ---");
+var settings = new AppSettings(new Dictionary<string, string>
+{
+    ["AppName"] = "MyApp",
+    ["Version"] = "3.0.0"
+});
+var userService = new UserService(settings);
+Console.WriteLine($"  {userService.GetWelcomeMessage("Alice")}");
+
+Console.WriteLine();
+Console.WriteLine("  In real code, you'd register AppSettings as singleton in DI:");
+Console.WriteLine("  services.AddSingleton<IAppSettings>(new AppSettings(config));");
+Console.WriteLine("  Then inject IAppSettings via constructor — testable, clean, explicit.");
+
 // --- Approach 1: Static readonly (simplest, thread-safe) ---
 
 // INTERVIEW ANSWER: The static readonly approach is thread-safe because the CLR
@@ -160,66 +223,3 @@ public class UserService(IAppSettings settings)
     public string GetWelcomeMessage(string userName) =>
         $"Welcome to {settings.Get("AppName")} v{settings.Get("Version")}, {userName}!";
 }
-
-// ============================================================================
-// DEMO
-// ============================================================================
-
-Console.WriteLine("=== SINGLETON PATTERN DEMO ===\n");
-
-// --- Approach 1: Static readonly ---
-Console.WriteLine("--- Approach 1: Static Readonly ---");
-var config1 = AppConfiguration.Instance;
-var config2 = AppConfiguration.Instance;
-Console.WriteLine($"  Same instance? {ReferenceEquals(config1, config2)}");
-Console.WriteLine($"  AppName: {config1.Get("AppName")}");
-Console.WriteLine($"  Version: {config1.Get("Version")}");
-Console.WriteLine();
-
-// --- Approach 2: Lazy<T> ---
-Console.WriteLine("--- Approach 2: Lazy<T> ---");
-var pool1 = ConnectionPool.Instance;
-var pool2 = ConnectionPool.Instance;
-Console.WriteLine($"  Same instance? {ReferenceEquals(pool1, pool2)}");
-var conn1 = pool1.AcquireConnection();
-var conn2 = pool1.AcquireConnection();
-Console.WriteLine($"  Acquired: {conn1}, {conn2}");
-Console.WriteLine($"  Active connections: {pool1.ActiveConnections}");
-Console.WriteLine();
-
-// --- Approach 3: Double-checked locking ---
-Console.WriteLine("--- Approach 3: Double-Checked Locking ---");
-var log1 = Logger.Instance;
-var log2 = Logger.Instance;
-Console.WriteLine($"  Same instance? {ReferenceEquals(log1, log2)}");
-log1.Log("Application started");
-log2.Log("Processing request"); // Same instance, same list
-Console.WriteLine($"  Entries ({log1.GetEntries().Count}):");
-foreach (var entry in log1.GetEntries())
-    Console.WriteLine($"    {entry}");
-Console.WriteLine();
-
-// --- Thread safety test ---
-Console.WriteLine("--- Thread Safety Test (Lazy<T>) ---");
-var tasks = Enumerable.Range(0, 10).Select(_ =>
-    Task.Run(() => ConnectionPool.Instance.AcquireConnection()));
-
-var connections = await Task.WhenAll(tasks);
-Console.WriteLine($"  All 10 threads got connections from same pool.");
-Console.WriteLine($"  Total active: {ConnectionPool.Instance.ActiveConnections}");
-Console.WriteLine();
-
-// --- Better Alternative: DI ---
-Console.WriteLine("--- Better Alternative: Dependency Injection ---");
-var settings = new AppSettings(new Dictionary<string, string>
-{
-    ["AppName"] = "MyApp",
-    ["Version"] = "3.0.0"
-});
-var userService = new UserService(settings);
-Console.WriteLine($"  {userService.GetWelcomeMessage("Alice")}");
-
-Console.WriteLine();
-Console.WriteLine("  In real code, you'd register AppSettings as singleton in DI:");
-Console.WriteLine("  services.AddSingleton<IAppSettings>(new AppSettings(config));");
-Console.WriteLine("  Then inject IAppSettings via constructor — testable, clean, explicit.");

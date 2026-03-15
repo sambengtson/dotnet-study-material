@@ -10,6 +10,89 @@
 // many optional parameters or requires a specific construction order.
 // ============================================================================
 
+// ============================================================================
+// DEMO
+// ============================================================================
+
+Console.WriteLine("=== BUILDER PATTERN DEMO ===\n");
+
+// --- Basic builder usage ---
+Console.WriteLine("--- Basic Builder Usage ---");
+var request = new HttpRequestBuilder()
+    .SetMethod("GET")
+    .SetUrl("https://api.example.com/users")
+    .AddHeader("Accept", "application/json")
+    .AddQueryParam("page", "1")
+    .AddQueryParam("limit", "25")
+    .SetTimeout(TimeSpan.FromSeconds(10))
+    .SetMaxRetries(3)
+    .Build();
+
+request.Describe();
+
+// --- POST with body ---
+Console.WriteLine("\n--- POST Request ---");
+var postRequest = new HttpRequestBuilder()
+    .SetMethod("POST")
+    .SetUrl("https://api.example.com/orders")
+    .AddHeader("Content-Type", "application/json")
+    .AddHeader("X-Correlation-Id", Guid.NewGuid().ToString())
+    .SetBody("""{"item": "Widget", "quantity": 5}""")
+    .SetMaxRetries(1)
+    .Build();
+
+postRequest.Describe();
+
+// --- Director pre-built recipes ---
+Console.WriteLine("\n--- Director Recipes ---");
+Console.WriteLine("\nJSON GET:");
+HttpRequestDirector.CreateJsonGet("https://api.example.com/products").Describe();
+
+Console.WriteLine("\nJSON POST:");
+HttpRequestDirector.CreateJsonPost(
+    "https://api.example.com/orders",
+    """{"item": "Gadget", "qty": 10}""").Describe();
+
+Console.WriteLine("\nAuthenticated Request:");
+HttpRequestDirector.CreateAuthenticatedRequest(
+    "https://api.example.com/me",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9").Describe();
+
+// --- Validation ---
+Console.WriteLine("\n--- Builder Validation ---");
+try
+{
+    new HttpRequestBuilder()
+        .SetMethod("GET")
+        .SetBody("should fail")
+        .SetUrl("https://example.com")
+        .Build();
+}
+catch (InvalidOperationException ex)
+{
+    Console.WriteLine($"  Caught: {ex.Message}");
+}
+
+// --- Connection string builder ---
+Console.WriteLine("\n--- Connection String Builder ---");
+var connStr = new ConnectionStringBuilder()
+    .Server("db.production.internal")
+    .Database("OrdersDb")
+    .Port(5432)
+    .Credentials("app_user", "s3cret")
+    .Encrypt(true)
+    .Timeout(15)
+    .Build();
+
+Console.WriteLine($"  {connStr}");
+
+var localConn = new ConnectionStringBuilder()
+    .Database("TestDb")
+    .Encrypt(false)
+    .Build();
+
+Console.WriteLine($"  {localConn}");
+
 // --- Product ---
 
 // INTERVIEW ANSWER: The product is the complex object being built. It should
@@ -252,86 +335,3 @@ public class ConnectionStringBuilder
             _username, _password, _encrypt, _connectionTimeout);
     }
 }
-
-// ============================================================================
-// DEMO
-// ============================================================================
-
-Console.WriteLine("=== BUILDER PATTERN DEMO ===\n");
-
-// --- Basic builder usage ---
-Console.WriteLine("--- Basic Builder Usage ---");
-var request = new HttpRequestBuilder()
-    .SetMethod("GET")
-    .SetUrl("https://api.example.com/users")
-    .AddHeader("Accept", "application/json")
-    .AddQueryParam("page", "1")
-    .AddQueryParam("limit", "25")
-    .SetTimeout(TimeSpan.FromSeconds(10))
-    .SetMaxRetries(3)
-    .Build();
-
-request.Describe();
-
-// --- POST with body ---
-Console.WriteLine("\n--- POST Request ---");
-var postRequest = new HttpRequestBuilder()
-    .SetMethod("POST")
-    .SetUrl("https://api.example.com/orders")
-    .AddHeader("Content-Type", "application/json")
-    .AddHeader("X-Correlation-Id", Guid.NewGuid().ToString())
-    .SetBody("""{"item": "Widget", "quantity": 5}""")
-    .SetMaxRetries(1)
-    .Build();
-
-postRequest.Describe();
-
-// --- Director pre-built recipes ---
-Console.WriteLine("\n--- Director Recipes ---");
-Console.WriteLine("\nJSON GET:");
-HttpRequestDirector.CreateJsonGet("https://api.example.com/products").Describe();
-
-Console.WriteLine("\nJSON POST:");
-HttpRequestDirector.CreateJsonPost(
-    "https://api.example.com/orders",
-    """{"item": "Gadget", "qty": 10}""").Describe();
-
-Console.WriteLine("\nAuthenticated Request:");
-HttpRequestDirector.CreateAuthenticatedRequest(
-    "https://api.example.com/me",
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9").Describe();
-
-// --- Validation ---
-Console.WriteLine("\n--- Builder Validation ---");
-try
-{
-    new HttpRequestBuilder()
-        .SetMethod("GET")
-        .SetBody("should fail")
-        .SetUrl("https://example.com")
-        .Build();
-}
-catch (InvalidOperationException ex)
-{
-    Console.WriteLine($"  Caught: {ex.Message}");
-}
-
-// --- Connection string builder ---
-Console.WriteLine("\n--- Connection String Builder ---");
-var connStr = new ConnectionStringBuilder()
-    .Server("db.production.internal")
-    .Database("OrdersDb")
-    .Port(5432)
-    .Credentials("app_user", "s3cret")
-    .Encrypt(true)
-    .Timeout(15)
-    .Build();
-
-Console.WriteLine($"  {connStr}");
-
-var localConn = new ConnectionStringBuilder()
-    .Database("TestDb")
-    .Encrypt(false)
-    .Build();
-
-Console.WriteLine($"  {localConn}");

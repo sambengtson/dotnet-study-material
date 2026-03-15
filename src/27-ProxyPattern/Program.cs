@@ -10,6 +10,72 @@
 // interface as the real object, so clients don't know they're using a proxy.
 // ============================================================================
 
+// ============================================================================
+// DEMO
+// ============================================================================
+
+Console.WriteLine("=== PROXY PATTERN DEMO ===\n");
+
+// --- Caching Proxy ---
+Console.WriteLine("--- Caching Proxy ---");
+IDocumentService service = new CachingDocumentProxy(new DocumentService());
+
+var doc1 = service.GetDocument("doc-1");  // Cache miss
+Console.WriteLine($"  Got: {doc1.Title}\n");
+
+var doc1Again = service.GetDocument("doc-1");  // Cache hit
+Console.WriteLine($"  Got again: {doc1Again.Title}\n");
+
+service.SaveDocument(doc1 with { Title = "Updated Architecture Guide" });
+var updated = service.GetDocument("doc-1");  // Cache hit (updated)
+Console.WriteLine($"  After update: {updated.Title}\n");
+
+// --- Access Control Proxy ---
+Console.WriteLine("--- Access Control Proxy ---");
+
+var adminService = new AccessControlProxy(new DocumentService(), new UserContext("admin_user", "admin"));
+adminService.SaveDocument(new Document("doc-4", "New Doc", "Content", "admin_user"));
+Console.WriteLine();
+
+var viewerService = new AccessControlProxy(new DocumentService(), new UserContext("viewer_user", "viewer"));
+try
+{
+    viewerService.DeleteDocument("doc-1");
+}
+catch (UnauthorizedAccessException ex)
+{
+    Console.WriteLine($"  Access denied: {ex.Message}\n");
+}
+
+// --- Stacked proxies: Log → Auth → Cache → Service ---
+Console.WriteLine("--- Stacked Proxies (Log → Auth → Cache → Service) ---");
+IDocumentService fullStack =
+    new LoggingDocumentProxy(
+        new AccessControlProxy(
+            new CachingDocumentProxy(
+                new DocumentService()),
+            new UserContext("editor_user", "editor")));
+
+var result = fullStack.GetDocument("doc-2");
+Console.WriteLine($"\n  Final result: {result.Title}\n");
+
+// Second call hits cache (no database access)
+Console.WriteLine("  Second call (cached):");
+result = fullStack.GetDocument("doc-2");
+Console.WriteLine($"  Final result: {result.Title}\n");
+
+// --- Lazy Proxy ---
+Console.WriteLine("--- Lazy (Virtual) Proxy ---");
+IDocumentService lazyService = new LazyDocumentService();
+Console.WriteLine("  Service created but NOT initialized yet");
+Console.WriteLine("  Calling GetDocument for the first time...");
+var lazyDoc = lazyService.GetDocument("doc-1");
+Console.WriteLine($"  Got: {lazyDoc.Title}\n");
+
+Console.WriteLine("  Calling again (already initialized)...");
+lazyDoc = lazyService.GetDocument("doc-2");
+Console.WriteLine($"  Got: {lazyDoc.Title}");
+
 // --- Subject interface ---
 
 public interface IDocumentService
@@ -207,69 +273,3 @@ public class LazyDocumentService : IDocumentService
     public void SaveDocument(Document doc) => RealService.SaveDocument(doc);
     public void DeleteDocument(string id) => RealService.DeleteDocument(id);
 }
-
-// ============================================================================
-// DEMO
-// ============================================================================
-
-Console.WriteLine("=== PROXY PATTERN DEMO ===\n");
-
-// --- Caching Proxy ---
-Console.WriteLine("--- Caching Proxy ---");
-IDocumentService service = new CachingDocumentProxy(new DocumentService());
-
-var doc1 = service.GetDocument("doc-1");  // Cache miss
-Console.WriteLine($"  Got: {doc1.Title}\n");
-
-var doc1Again = service.GetDocument("doc-1");  // Cache hit
-Console.WriteLine($"  Got again: {doc1Again.Title}\n");
-
-service.SaveDocument(doc1 with { Title = "Updated Architecture Guide" });
-var updated = service.GetDocument("doc-1");  // Cache hit (updated)
-Console.WriteLine($"  After update: {updated.Title}\n");
-
-// --- Access Control Proxy ---
-Console.WriteLine("--- Access Control Proxy ---");
-
-var adminService = new AccessControlProxy(new DocumentService(), new UserContext("admin_user", "admin"));
-adminService.SaveDocument(new Document("doc-4", "New Doc", "Content", "admin_user"));
-Console.WriteLine();
-
-var viewerService = new AccessControlProxy(new DocumentService(), new UserContext("viewer_user", "viewer"));
-try
-{
-    viewerService.DeleteDocument("doc-1");
-}
-catch (UnauthorizedAccessException ex)
-{
-    Console.WriteLine($"  Access denied: {ex.Message}\n");
-}
-
-// --- Stacked proxies: Log → Auth → Cache → Service ---
-Console.WriteLine("--- Stacked Proxies (Log → Auth → Cache → Service) ---");
-IDocumentService fullStack =
-    new LoggingDocumentProxy(
-        new AccessControlProxy(
-            new CachingDocumentProxy(
-                new DocumentService()),
-            new UserContext("editor_user", "editor")));
-
-var result = fullStack.GetDocument("doc-2");
-Console.WriteLine($"\n  Final result: {result.Title}\n");
-
-// Second call hits cache (no database access)
-Console.WriteLine("  Second call (cached):");
-result = fullStack.GetDocument("doc-2");
-Console.WriteLine($"  Final result: {result.Title}\n");
-
-// --- Lazy Proxy ---
-Console.WriteLine("--- Lazy (Virtual) Proxy ---");
-IDocumentService lazyService = new LazyDocumentService();
-Console.WriteLine("  Service created but NOT initialized yet");
-Console.WriteLine("  Calling GetDocument for the first time...");
-var lazyDoc = lazyService.GetDocument("doc-1");
-Console.WriteLine($"  Got: {lazyDoc.Title}\n");
-
-Console.WriteLine("  Calling again (already initialized)...");
-lazyDoc = lazyService.GetDocument("doc-2");
-Console.WriteLine($"  Got: {lazyDoc.Title}");

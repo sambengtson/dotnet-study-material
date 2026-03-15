@@ -12,6 +12,58 @@
 
 using System.Diagnostics.CodeAnalysis;
 
+// ============================================================================
+// DEMO
+// ============================================================================
+
+Console.WriteLine("=== POLYMORPHISM DEMO ===\n");
+
+// --- Runtime Polymorphism ---
+Console.WriteLine("--- Runtime Polymorphism (virtual/override/abstract) ---");
+Console.WriteLine("Sending the same message through different notification services:\n");
+
+// INTERVIEW ANSWER: This is the power of runtime polymorphism — we have a collection
+// of NotificationService references, but each one behaves differently when we call
+// SendAsync(). The CLR dispatches to the correct override based on the actual type.
+NotificationService[] services =
+[
+    new EmailNotification(),
+    new SmsNotification(),
+    new SlackNotification("engineering")
+];
+
+foreach (var service in services)
+{
+    Console.WriteLine($"Using {service.ServiceName}:");
+    await service.SendAsync("user@example.com", "  Your deployment succeeded!  ");
+    Console.WriteLine();
+}
+
+// --- Compile-Time Polymorphism ---
+Console.WriteLine("--- Compile-Time Polymorphism (method overloading) ---\n");
+
+var price1 = PricingCalculator.Calculate(100m);
+var price2 = PricingCalculator.Calculate(100m, 15m);
+var price3 = PricingCalculator.Calculate(100m, "SAVE10");
+
+Console.WriteLine($"Base price only:      {price1}");
+Console.WriteLine($"With 15% discount:    {price2}");
+Console.WriteLine($"With SAVE10 coupon:   {price3}");
+
+Console.WriteLine("\n--- Operator Overloading ---\n");
+
+var itemA = PricingCalculator.Calculate(29.99m, "VIP");
+var itemB = PricingCalculator.Calculate(49.99m, 10m);
+var total = itemA + itemB;
+var bulk = itemA * 3;
+
+Console.WriteLine($"Item A:  {itemA}");
+Console.WriteLine($"Item B:  {itemB}");
+Console.WriteLine($"A + B:   {total}");
+Console.WriteLine($"A x 3:   {bulk}");
+Console.WriteLine($"A == A:  {itemA == itemA}");
+Console.WriteLine($"A == B:  {itemA == itemB}");
+
 // ---- RUNTIME POLYMORPHISM (virtual/override/abstract) ----
 
 // INTERVIEW ANSWER: An abstract class can't be instantiated directly. It defines
@@ -155,55 +207,3 @@ public readonly struct Money : IEquatable<Money>
     public override int GetHashCode() => FinalPrice.GetHashCode();
     public override string ToString() => $"Base: {BasePrice:C}, Discount: {Discount:C}, Final: {FinalPrice:C}";
 }
-
-// ============================================================================
-// DEMO
-// ============================================================================
-
-Console.WriteLine("=== POLYMORPHISM DEMO ===\n");
-
-// --- Runtime Polymorphism ---
-Console.WriteLine("--- Runtime Polymorphism (virtual/override/abstract) ---");
-Console.WriteLine("Sending the same message through different notification services:\n");
-
-// INTERVIEW ANSWER: This is the power of runtime polymorphism — we have a collection
-// of NotificationService references, but each one behaves differently when we call
-// SendAsync(). The CLR dispatches to the correct override based on the actual type.
-NotificationService[] services =
-[
-    new EmailNotification(),
-    new SmsNotification(),
-    new SlackNotification("engineering")
-];
-
-foreach (var service in services)
-{
-    Console.WriteLine($"Using {service.ServiceName}:");
-    await service.SendAsync("user@example.com", "  Your deployment succeeded!  ");
-    Console.WriteLine();
-}
-
-// --- Compile-Time Polymorphism ---
-Console.WriteLine("--- Compile-Time Polymorphism (method overloading) ---\n");
-
-var price1 = PricingCalculator.Calculate(100m);
-var price2 = PricingCalculator.Calculate(100m, 15m);
-var price3 = PricingCalculator.Calculate(100m, "SAVE10");
-
-Console.WriteLine($"Base price only:      {price1}");
-Console.WriteLine($"With 15% discount:    {price2}");
-Console.WriteLine($"With SAVE10 coupon:   {price3}");
-
-Console.WriteLine("\n--- Operator Overloading ---\n");
-
-var itemA = PricingCalculator.Calculate(29.99m, "VIP");
-var itemB = PricingCalculator.Calculate(49.99m, 10m);
-var total = itemA + itemB;
-var bulk = itemA * 3;
-
-Console.WriteLine($"Item A:  {itemA}");
-Console.WriteLine($"Item B:  {itemB}");
-Console.WriteLine($"A + B:   {total}");
-Console.WriteLine($"A x 3:   {bulk}");
-Console.WriteLine($"A == A:  {itemA == itemA}");
-Console.WriteLine($"A == B:  {itemA == itemB}");

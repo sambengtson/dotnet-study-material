@@ -10,6 +10,86 @@
 // delegates, but it's valuable to understand the manual implementation too.
 // ============================================================================
 
+// ============================================================================
+// DEMO
+// ============================================================================
+
+Console.WriteLine("=== OBSERVER PATTERN DEMO ===\n");
+
+// --- Manual Implementation ---
+Console.WriteLine("--- Manual Observer: Stock Ticker ---\n");
+
+var ticker = new StockTicker();
+var display = new PriceDisplay();
+var alert = new PriceAlert(thresholdPercent: 5m);
+var logger = new TradeLogger();
+
+ticker.Subscribe(display);
+ticker.Subscribe(alert);
+ticker.Subscribe(logger);
+Console.WriteLine();
+
+ticker.UpdatePrice("MSFT", 380.50m);
+ticker.UpdatePrice("AAPL", 175.25m);
+Console.WriteLine();
+
+ticker.UpdatePrice("MSFT", 395.00m); // ~3.8% change — no alert
+ticker.UpdatePrice("AAPL", 160.00m); // ~8.7% change — triggers alert!
+Console.WriteLine();
+
+// Unsubscribe the display
+ticker.Unsubscribe(display);
+Console.WriteLine();
+
+ticker.UpdatePrice("MSFT", 400.00m);
+Console.WriteLine();
+
+logger.PrintLog();
+Console.WriteLine();
+
+// --- C# Events Implementation ---
+Console.WriteLine("--- C# Events: Inventory Manager ---\n");
+
+var inventory = new InventoryManager();
+
+// Subscribe using events (lambda subscribers)
+inventory.StockChanged += (sender, e) =>
+    Console.WriteLine($"  [Stock] {e.ProductId}: {e.OldQuantity} → {e.NewQuantity}");
+
+inventory.LowStockDetected += (sender, e) =>
+    Console.WriteLine($"  [LOW STOCK WARNING] {e.ProductId} is at {e.NewQuantity} units!");
+
+// Named method subscriber
+void OnStockChanged(object? sender, InventoryEventArgs e)
+{
+    if (e.NewQuantity == 0)
+        Console.WriteLine($"  [OUT OF STOCK] {e.ProductId} — trigger reorder!");
+}
+inventory.StockChanged += OnStockChanged;
+
+inventory.UpdateStock("WIDGET-A", 50);
+inventory.UpdateStock("WIDGET-B", 100);
+Console.WriteLine();
+
+inventory.UpdateStock("WIDGET-A", 3);  // Triggers low stock
+inventory.UpdateStock("WIDGET-B", 25);
+Console.WriteLine();
+
+inventory.UpdateStock("WIDGET-A", 0);  // Out of stock!
+Console.WriteLine();
+
+// INTERVIEW ANSWER: The key difference between the manual observer and C# events:
+// With manual, you have full control (can enumerate observers, control order, etc.)
+// but more boilerplate. With events, you get language-level safety (only the declaring
+// class can invoke) and cleaner syntax, but less control over the invocation process.
+// For most C# code, events are the right choice. Use the manual pattern when you
+// need custom behavior like filtering, priority ordering, or async notification.
+
+// Unsubscribe named method
+inventory.StockChanged -= OnStockChanged;
+Console.WriteLine("  (OnStockChanged handler removed)");
+inventory.UpdateStock("WIDGET-A", 0); // No "OUT OF STOCK" message this time
+
 // --- Manual Observer Implementation ---
 
 // INTERVIEW ANSWER: The manual implementation uses interfaces — IObserver and
@@ -138,83 +218,3 @@ public class InventoryManager
 
     public int GetStock(string productId) => _stock.GetValueOrDefault(productId, 0);
 }
-
-// ============================================================================
-// DEMO
-// ============================================================================
-
-Console.WriteLine("=== OBSERVER PATTERN DEMO ===\n");
-
-// --- Manual Implementation ---
-Console.WriteLine("--- Manual Observer: Stock Ticker ---\n");
-
-var ticker = new StockTicker();
-var display = new PriceDisplay();
-var alert = new PriceAlert(thresholdPercent: 5m);
-var logger = new TradeLogger();
-
-ticker.Subscribe(display);
-ticker.Subscribe(alert);
-ticker.Subscribe(logger);
-Console.WriteLine();
-
-ticker.UpdatePrice("MSFT", 380.50m);
-ticker.UpdatePrice("AAPL", 175.25m);
-Console.WriteLine();
-
-ticker.UpdatePrice("MSFT", 395.00m); // ~3.8% change — no alert
-ticker.UpdatePrice("AAPL", 160.00m); // ~8.7% change — triggers alert!
-Console.WriteLine();
-
-// Unsubscribe the display
-ticker.Unsubscribe(display);
-Console.WriteLine();
-
-ticker.UpdatePrice("MSFT", 400.00m);
-Console.WriteLine();
-
-logger.PrintLog();
-Console.WriteLine();
-
-// --- C# Events Implementation ---
-Console.WriteLine("--- C# Events: Inventory Manager ---\n");
-
-var inventory = new InventoryManager();
-
-// Subscribe using events (lambda subscribers)
-inventory.StockChanged += (sender, e) =>
-    Console.WriteLine($"  [Stock] {e.ProductId}: {e.OldQuantity} → {e.NewQuantity}");
-
-inventory.LowStockDetected += (sender, e) =>
-    Console.WriteLine($"  [LOW STOCK WARNING] {e.ProductId} is at {e.NewQuantity} units!");
-
-// Named method subscriber
-void OnStockChanged(object? sender, InventoryEventArgs e)
-{
-    if (e.NewQuantity == 0)
-        Console.WriteLine($"  [OUT OF STOCK] {e.ProductId} — trigger reorder!");
-}
-inventory.StockChanged += OnStockChanged;
-
-inventory.UpdateStock("WIDGET-A", 50);
-inventory.UpdateStock("WIDGET-B", 100);
-Console.WriteLine();
-
-inventory.UpdateStock("WIDGET-A", 3);  // Triggers low stock
-inventory.UpdateStock("WIDGET-B", 25);
-Console.WriteLine();
-
-inventory.UpdateStock("WIDGET-A", 0);  // Out of stock!
-Console.WriteLine();
-
-// INTERVIEW ANSWER: The key difference between the manual observer and C# events:
-// With manual, you have full control (can enumerate observers, control order, etc.)
-// but more boilerplate. With events, you get language-level safety (only the declaring
-// class can invoke) and cleaner syntax, but less control over the invocation process.
-// For most C# code, events are the right choice. Use the manual pattern when you
-// need custom behavior like filtering, priority ordering, or async notification.
-
-// Unsubscribe named method
-inventory.StockChanged -= OnStockChanged;
-Console.WriteLine("  (OnStockChanged handler removed)");
-inventory.UpdateStock("WIDGET-A", 0); // No "OUT OF STOCK" message this time

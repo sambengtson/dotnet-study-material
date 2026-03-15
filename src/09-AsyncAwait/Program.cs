@@ -12,102 +12,6 @@
 
 using System.Runtime.CompilerServices;
 
-// --- Simulated HTTP Client ---
-
-public class ApiClient
-{
-    private readonly HttpClient _http = new();
-    private readonly string _baseUrl;
-
-    public ApiClient(string baseUrl) => _baseUrl = baseUrl;
-
-    // INTERVIEW ANSWER: Task<T> represents a future value. The method returns
-    // immediately with a Task, and the actual value becomes available when the
-    // I/O completes. The caller can await it or compose multiple tasks together.
-    public async Task<string> GetUserAsync(string userId)
-    {
-        await Task.Delay(100); // Simulate HTTP latency
-        return $"{{\"id\":\"{userId}\",\"name\":\"User {userId}\",\"active\":true}}";
-    }
-
-    public async Task<string> GetOrdersAsync(string userId)
-    {
-        await Task.Delay(150);
-        return $"[{{\"orderId\":\"ORD-1\",\"userId\":\"{userId}\",\"total\":99.99}}]";
-    }
-
-    // INTERVIEW ANSWER: ValueTask<T> is a struct-based alternative to Task<T>.
-    // Use it when the method frequently returns synchronously (like a cache hit).
-    // It avoids the heap allocation of a Task object in the fast path. Don't use
-    // it everywhere — only when profiling shows the Task allocation matters.
-    private readonly Dictionary<string, string> _cache = [];
-
-    public ValueTask<string> GetCachedProfileAsync(string userId)
-    {
-        if (_cache.TryGetValue(userId, out var cached))
-        {
-            Console.WriteLine($"  [Cache HIT] {userId}");
-            return ValueTask.FromResult(cached); // No Task allocation!
-        }
-
-        return LoadAndCacheAsync(userId);
-    }
-
-    private async ValueTask<string> LoadAndCacheAsync(string userId)
-    {
-        Console.WriteLine($"  [Cache MISS] {userId}");
-        var profile = await GetUserAsync(userId);
-        _cache[userId] = profile;
-        return profile;
-    }
-}
-
-// --- Cancellation ---
-
-public class DataProcessor
-{
-    // INTERVIEW ANSWER: CancellationToken is how you cooperatively cancel async
-    // operations. The caller creates a CancellationTokenSource, passes the token
-    // to the async method, and the method checks it periodically. It's cooperative
-    // because the method has to actually check — you can't force-kill an async
-    // operation from outside.
-    public async Task ProcessBatchAsync(
-        IEnumerable<string> items,
-        CancellationToken cancellationToken = default)
-    {
-        foreach (var item in items)
-        {
-            // Check for cancellation before each unit of work
-            cancellationToken.ThrowIfCancellationRequested();
-
-            Console.WriteLine($"  Processing: {item}");
-            await Task.Delay(200, cancellationToken);
-        }
-    }
-}
-
-// --- Async Streams ---
-
-public class EventStream
-{
-    // INTERVIEW ANSWER: IAsyncEnumerable<T> is the async version of IEnumerable<T>.
-    // It lets you produce items asynchronously one at a time, and the consumer can
-    // `await foreach` over them. This is perfect for streaming data — database cursors,
-    // event streams, paginated APIs — where you don't want to load everything into
-    // memory at once.
-    public async IAsyncEnumerable<string> GetEventsAsync(
-        int count,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
-    {
-        for (int i = 1; i <= count; i++)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            await Task.Delay(100, cancellationToken);
-            yield return $"Event-{i:D3} at {DateTime.UtcNow:HH:mm:ss.fff}";
-        }
-    }
-}
-
 // ============================================================================
 // DEMO
 // ============================================================================
@@ -226,4 +130,100 @@ try
 catch (Exception ex)
 {
     Console.WriteLine($"  Unexpected: {ex.Message}");
+}
+
+// --- Simulated HTTP Client ---
+
+public class ApiClient
+{
+    private readonly HttpClient _http = new();
+    private readonly string _baseUrl;
+
+    public ApiClient(string baseUrl) => _baseUrl = baseUrl;
+
+    // INTERVIEW ANSWER: Task<T> represents a future value. The method returns
+    // immediately with a Task, and the actual value becomes available when the
+    // I/O completes. The caller can await it or compose multiple tasks together.
+    public async Task<string> GetUserAsync(string userId)
+    {
+        await Task.Delay(100); // Simulate HTTP latency
+        return $"{{\"id\":\"{userId}\",\"name\":\"User {userId}\",\"active\":true}}";
+    }
+
+    public async Task<string> GetOrdersAsync(string userId)
+    {
+        await Task.Delay(150);
+        return $"[{{\"orderId\":\"ORD-1\",\"userId\":\"{userId}\",\"total\":99.99}}]";
+    }
+
+    // INTERVIEW ANSWER: ValueTask<T> is a struct-based alternative to Task<T>.
+    // Use it when the method frequently returns synchronously (like a cache hit).
+    // It avoids the heap allocation of a Task object in the fast path. Don't use
+    // it everywhere — only when profiling shows the Task allocation matters.
+    private readonly Dictionary<string, string> _cache = [];
+
+    public ValueTask<string> GetCachedProfileAsync(string userId)
+    {
+        if (_cache.TryGetValue(userId, out var cached))
+        {
+            Console.WriteLine($"  [Cache HIT] {userId}");
+            return ValueTask.FromResult(cached); // No Task allocation!
+        }
+
+        return LoadAndCacheAsync(userId);
+    }
+
+    private async ValueTask<string> LoadAndCacheAsync(string userId)
+    {
+        Console.WriteLine($"  [Cache MISS] {userId}");
+        var profile = await GetUserAsync(userId);
+        _cache[userId] = profile;
+        return profile;
+    }
+}
+
+// --- Cancellation ---
+
+public class DataProcessor
+{
+    // INTERVIEW ANSWER: CancellationToken is how you cooperatively cancel async
+    // operations. The caller creates a CancellationTokenSource, passes the token
+    // to the async method, and the method checks it periodically. It's cooperative
+    // because the method has to actually check — you can't force-kill an async
+    // operation from outside.
+    public async Task ProcessBatchAsync(
+        IEnumerable<string> items,
+        CancellationToken cancellationToken = default)
+    {
+        foreach (var item in items)
+        {
+            // Check for cancellation before each unit of work
+            cancellationToken.ThrowIfCancellationRequested();
+
+            Console.WriteLine($"  Processing: {item}");
+            await Task.Delay(200, cancellationToken);
+        }
+    }
+}
+
+// --- Async Streams ---
+
+public class EventStream
+{
+    // INTERVIEW ANSWER: IAsyncEnumerable<T> is the async version of IEnumerable<T>.
+    // It lets you produce items asynchronously one at a time, and the consumer can
+    // `await foreach` over them. This is perfect for streaming data — database cursors,
+    // event streams, paginated APIs — where you don't want to load everything into
+    // memory at once.
+    public async IAsyncEnumerable<string> GetEventsAsync(
+        int count,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        for (int i = 1; i <= count; i++)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            await Task.Delay(100, cancellationToken);
+            yield return $"Event-{i:D3} at {DateTime.UtcNow:HH:mm:ss.fff}";
+        }
+    }
 }

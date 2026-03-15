@@ -10,6 +10,65 @@
 // explicit and self-documenting. This is closely related to finite state machines.
 // ============================================================================
 
+// ============================================================================
+// DEMO
+// ============================================================================
+
+Console.WriteLine("=== STATE PATTERN DEMO ===\n");
+
+// --- Happy path: Draft → Confirmed → Shipped → Delivered ---
+Console.WriteLine("--- Order Lifecycle (Happy Path) ---");
+var order1 = new OrderContext("ORD-001", "Alice");
+Console.WriteLine($"  State: {order1.CurrentState}\n");
+
+order1.Confirm();
+Console.WriteLine($"  State: {order1.CurrentState}\n");
+
+order1.Ship();
+Console.WriteLine($"  State: {order1.CurrentState}\n");
+
+order1.Deliver();
+Console.WriteLine($"  State: {order1.CurrentState}\n");
+
+// --- Invalid transitions ---
+Console.WriteLine("--- Invalid Transitions ---");
+Console.WriteLine("  Trying to ship a delivered order:");
+order1.Ship();
+
+Console.WriteLine("  Trying to cancel a delivered order:");
+order1.Cancel();
+
+// --- Cancellation path ---
+Console.WriteLine("\n--- Order Cancellation ---");
+var order2 = new OrderContext("ORD-002", "Bob");
+order2.Confirm();
+order2.Cancel();
+Console.WriteLine($"  State: {order2.CurrentState}\n");
+
+Console.WriteLine("  Trying to confirm cancelled order:");
+order2.Confirm();
+
+// --- Skip-ahead attempt ---
+Console.WriteLine("\n--- Skip-ahead Attempt ---");
+var order3 = new OrderContext("ORD-003", "Carol");
+Console.WriteLine("  Trying to ship a draft order:");
+order3.Ship();
+Console.WriteLine("  Trying to deliver a draft order:");
+order3.Deliver();
+
+// --- Order history ---
+Console.WriteLine("\n--- Order History ---");
+order1.PrintHistory();
+
+// --- Traffic light state machine ---
+Console.WriteLine("\n--- Traffic Light State Machine ---");
+var light = new TrafficLight();
+for (int i = 0; i < 7; i++)
+{
+    light.Display();
+    light.Advance();
+}
+
 // --- State interface ---
 
 // INTERVIEW ANSWER: The state interface declares methods for all behaviors
@@ -229,63 +288,4 @@ public class TrafficLight
     {
         Console.WriteLine($"    [{_state.Color}] {_state.GetInstruction()} ({_state.DurationSeconds}s)");
     }
-}
-
-// ============================================================================
-// DEMO
-// ============================================================================
-
-Console.WriteLine("=== STATE PATTERN DEMO ===\n");
-
-// --- Happy path: Draft → Confirmed → Shipped → Delivered ---
-Console.WriteLine("--- Order Lifecycle (Happy Path) ---");
-var order1 = new OrderContext("ORD-001", "Alice");
-Console.WriteLine($"  State: {order1.CurrentState}\n");
-
-order1.Confirm();
-Console.WriteLine($"  State: {order1.CurrentState}\n");
-
-order1.Ship();
-Console.WriteLine($"  State: {order1.CurrentState}\n");
-
-order1.Deliver();
-Console.WriteLine($"  State: {order1.CurrentState}\n");
-
-// --- Invalid transitions ---
-Console.WriteLine("--- Invalid Transitions ---");
-Console.WriteLine("  Trying to ship a delivered order:");
-order1.Ship();
-
-Console.WriteLine("  Trying to cancel a delivered order:");
-order1.Cancel();
-
-// --- Cancellation path ---
-Console.WriteLine("\n--- Order Cancellation ---");
-var order2 = new OrderContext("ORD-002", "Bob");
-order2.Confirm();
-order2.Cancel();
-Console.WriteLine($"  State: {order2.CurrentState}\n");
-
-Console.WriteLine("  Trying to confirm cancelled order:");
-order2.Confirm();
-
-// --- Skip-ahead attempt ---
-Console.WriteLine("\n--- Skip-ahead Attempt ---");
-var order3 = new OrderContext("ORD-003", "Carol");
-Console.WriteLine("  Trying to ship a draft order:");
-order3.Ship();
-Console.WriteLine("  Trying to deliver a draft order:");
-order3.Deliver();
-
-// --- Order history ---
-Console.WriteLine("\n--- Order History ---");
-order1.PrintHistory();
-
-// --- Traffic light state machine ---
-Console.WriteLine("\n--- Traffic Light State Machine ---");
-var light = new TrafficLight();
-for (int i = 0; i < 7; i++)
-{
-    light.Display();
-    light.Advance();
 }

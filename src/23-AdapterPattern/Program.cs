@@ -10,6 +10,38 @@
 // preferred) and class adapter (uses inheritance, less flexible).
 // ============================================================================
 
+// ============================================================================
+// DEMO
+// ============================================================================
+
+Console.WriteLine("=== ADAPTER PATTERN DEMO ===\n");
+
+// --- Using adapted legacy system ---
+Console.WriteLine("--- Legacy Payment System (Adapted) ---");
+var legacyAdapter = new LegacyPaymentAdapter(new LegacyPaymentGateway());
+var checkout1 = new CheckoutService(legacyAdapter);
+checkout1.ProcessOrder("CUST-001", 149.99m);
+
+// --- Using adapted Stripe API ---
+Console.WriteLine("--- Stripe API (Adapted) ---");
+var stripeAdapter = new StripePaymentAdapter(new StripeApiClient());
+var checkout2 = new CheckoutService(stripeAdapter);
+checkout2.ProcessOrder("CUST-002", 299.50m);
+
+// --- Polymorphic usage: same client code, different adapters ---
+Console.WriteLine("--- Polymorphic Usage ---");
+IPaymentProcessor[] processors =
+[
+    new LegacyPaymentAdapter(new LegacyPaymentGateway()),
+    new StripePaymentAdapter(new StripeApiClient())
+];
+
+foreach (var processor in processors)
+{
+    var service = new CheckoutService(processor);
+    service.ProcessOrder("CUST-003", 75.00m);
+}
+
 // --- Target interface (what our application expects) ---
 
 public interface IPaymentProcessor
@@ -190,36 +222,4 @@ public class CheckoutService
         Console.WriteLine($"  Result: {(result.Success ? "OK" : "FAILED")} " +
                           $"[{result.TransactionId}] {result.Message}\n");
     }
-}
-
-// ============================================================================
-// DEMO
-// ============================================================================
-
-Console.WriteLine("=== ADAPTER PATTERN DEMO ===\n");
-
-// --- Using adapted legacy system ---
-Console.WriteLine("--- Legacy Payment System (Adapted) ---");
-var legacyAdapter = new LegacyPaymentAdapter(new LegacyPaymentGateway());
-var checkout1 = new CheckoutService(legacyAdapter);
-checkout1.ProcessOrder("CUST-001", 149.99m);
-
-// --- Using adapted Stripe API ---
-Console.WriteLine("--- Stripe API (Adapted) ---");
-var stripeAdapter = new StripePaymentAdapter(new StripeApiClient());
-var checkout2 = new CheckoutService(stripeAdapter);
-checkout2.ProcessOrder("CUST-002", 299.50m);
-
-// --- Polymorphic usage: same client code, different adapters ---
-Console.WriteLine("--- Polymorphic Usage ---");
-IPaymentProcessor[] processors =
-[
-    new LegacyPaymentAdapter(new LegacyPaymentGateway()),
-    new StripePaymentAdapter(new StripeApiClient())
-];
-
-foreach (var processor in processors)
-{
-    var service = new CheckoutService(processor);
-    service.ProcessOrder("CUST-003", 75.00m);
 }

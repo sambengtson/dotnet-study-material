@@ -1,0 +1,144 @@
+@host = http://localhost:5090
+
+### Register a new user (built-in Identity endpoint)
+POST {{host}}/register
+Content-Type: application/json
+
+{
+  "email": "admin@example.com",
+  "password": "P@ssword123"
+}
+
+### Login (built-in Identity endpoint)
+POST {{host}}/login
+Content-Type: application/json
+
+{
+  "email": "admin@example.com",
+  "password": "P@ssword123"
+}
+
+> {%
+    client.global.set("token", response.body.accessToken);
+%}
+
+### List all users
+GET {{host}}/api/users
+Authorization: Bearer {{token}}
+
+### Get user by ID
+GET {{host}}/api/users/REPLACE_WITH_USER_ID
+Authorization: Bearer {{token}}
+
+### Update user
+PUT {{host}}/api/users/REPLACE_WITH_USER_ID
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "email": null,
+  "phoneNumber": "555-0100",
+  "displayName": "Sam Admin",
+  "facilityCode": "FAC-001",
+  "locked": false
+}
+
+### Delete user
+DELETE {{host}}/api/users/REPLACE_WITH_USER_ID
+Authorization: Bearer {{token}}
+
+### Assign roles to user
+POST {{host}}/api/users/REPLACE_WITH_USER_ID/roles
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "roles": ["Admin", "Operator"]
+}
+
+### Remove roles from user
+DELETE {{host}}/api/users/REPLACE_WITH_USER_ID/roles
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "roles": ["Operator"]
+}
+
+### List user claims
+GET {{host}}/api/users/1d3b0278-50fd-43c0-bff9-8684ffe14abc/claims
+Authorization: Bearer {{token}}
+
+### Add user claim
+POST {{host}}/api/users/1d3b0278-50fd-43c0-bff9-8684ffe14abcU/claims
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "type": "department",
+  "value": "Engineering"
+}
+
+### Remove user claim
+DELETE {{host}}/api/users/REPLACE_WITH_USER_ID/claims
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "type": "department",
+  "value": "Engineering"
+}
+
+### Admin password reset
+POST {{host}}/api/users/REPLACE_WITH_USER_ID/password/reset
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "newPassword": "NewP@ssword456"
+}
+
+### Refresh security stamp (invalidate all sessions)
+POST {{host}}/api/users/REPLACE_WITH_USER_ID/security-stamp/refresh
+Authorization: Bearer {{token}}
+
+### List all roles
+GET {{host}}/api/roles
+Authorization: Bearer {{token}}
+
+### Create a new role
+POST {{host}}/api/roles
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Auditor"
+}
+
+### Delete a role
+DELETE {{host}}/api/roles/Auditor
+Authorization: Bearer {{token}}
+
+### List role claims
+GET {{host}}/api/roles/Admin/claims
+Authorization: Bearer {{token}}
+
+### Add role claim
+POST {{host}}/api/roles/Admin/claims
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "type": "permission",
+  "value": "manage:users"
+}
+
+### Remove role claim
+DELETE {{host}}/api/roles/Admin/claims
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "type": "permission",
+  "value": "manage:users"
+}

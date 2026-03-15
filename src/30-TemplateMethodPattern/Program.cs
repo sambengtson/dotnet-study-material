@@ -11,6 +11,40 @@
 // It's the "don't call us, we'll call you" principle (Hollywood Principle).
 // ============================================================================
 
+// ============================================================================
+// DEMO
+// ============================================================================
+
+Console.WriteLine("=== TEMPLATE METHOD PATTERN DEMO ===\n");
+
+var sampleData = new[] { "Widget", "Gadget", "Sprocket" };
+
+// --- Different exporters, same algorithm ---
+Console.WriteLine("--- CSV Export ---");
+new CsvExporter().Export(sampleData);
+
+Console.WriteLine("--- JSON Export ---");
+new JsonExporter().Export(sampleData);
+
+Console.WriteLine("--- HTML Export ---");
+new HtmlExporter().Export(sampleData);
+
+// --- Report generators ---
+var salesData = new Dictionary<string, decimal>
+{
+    ["North Region"] = 450_000m,
+    ["South Region"] = 320_000m,
+    ["East Region"] = 580_000m,
+    ["West Region"] = 410_000m,
+    ["Central"] = 290_000m
+};
+
+Console.WriteLine("--- Executive Report ---");
+new ExecutiveReport().GenerateReport("Q4 Sales", salesData);
+
+Console.WriteLine("--- Detailed Report ---");
+new DetailedReport().GenerateReport("Q4 Sales", salesData);
+
 // --- Abstract class with template method ---
 
 // INTERVIEW ANSWER: The template method is a non-virtual method in the base
@@ -93,7 +127,7 @@ public class JsonExporter : DataExporter
         $$"""{"name":"{{data}}","value":100,"status":"active"}""";
 
     protected override string CreateFooter(int rowCount) =>
-        $"""],"meta":{{"count":{rowCount}}}}}""";
+        $$$"""],"meta":{"count":{{{rowCount}}}}}""";
 
     protected override string Combine(string header, List<string> rows, string footer)
     {
@@ -224,37 +258,3 @@ public class DetailedReport : ReportGenerator
         base.PrintConclusion(data);
     }
 }
-
-// ============================================================================
-// DEMO
-// ============================================================================
-
-Console.WriteLine("=== TEMPLATE METHOD PATTERN DEMO ===\n");
-
-var sampleData = new[] { "Widget", "Gadget", "Sprocket" };
-
-// --- Different exporters, same algorithm ---
-Console.WriteLine("--- CSV Export ---");
-new CsvExporter().Export(sampleData);
-
-Console.WriteLine("--- JSON Export ---");
-new JsonExporter().Export(sampleData);
-
-Console.WriteLine("--- HTML Export ---");
-new HtmlExporter().Export(sampleData);
-
-// --- Report generators ---
-var salesData = new Dictionary<string, decimal>
-{
-    ["North Region"] = 450_000m,
-    ["South Region"] = 320_000m,
-    ["East Region"] = 580_000m,
-    ["West Region"] = 410_000m,
-    ["Central"] = 290_000m
-};
-
-Console.WriteLine("--- Executive Report ---");
-new ExecutiveReport().GenerateReport("Q4 Sales", salesData);
-
-Console.WriteLine("--- Detailed Report ---");
-new DetailedReport().GenerateReport("Q4 Sales", salesData);

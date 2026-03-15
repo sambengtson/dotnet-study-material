@@ -11,6 +11,73 @@
 // They're guidelines, not laws — the goal is code that's easy to test, extend, and reason about.
 // ============================================================================
 
+// ============================================================================
+// DEMO
+// ============================================================================
+
+Console.WriteLine("=== SOLID PRINCIPLES DEMO ===\n");
+
+// --- S: Single Responsibility ---
+Console.WriteLine("=== S — Single Responsibility ===\n");
+Console.WriteLine("BAD (one class does everything):");
+var badService = new BadOrderService();
+badService.ProcessOrder("ORD-1", 99.99m);
+Console.WriteLine();
+
+Console.WriteLine("GOOD (separated concerns):");
+var goodService = new GoodOrderService(new OrderValidator(), new OrderRepository(), new OrderNotifier());
+goodService.ProcessOrder("ORD-2", 149.99m);
+Console.WriteLine();
+
+// --- O: Open/Closed ---
+Console.WriteLine("=== O — Open/Closed ===\n");
+var calc = new DiscountCalculator();
+calc.Apply(100m, new PercentageDiscount(15));
+calc.Apply(100m, new FixedDiscount(20));
+calc.Apply(100m, new BuyTwoGetOneDiscount());
+Console.WriteLine();
+
+// --- L: Liskov Substitution ---
+Console.WriteLine("=== L — Liskov Substitution ===\n");
+Console.WriteLine("BAD (ReadOnlyStorage throws on Write):");
+BadStorage storage = new BadReadOnlyStorage();
+try { storage.Write("key", "value"); }
+catch (NotSupportedException ex) { Console.WriteLine($"  Caught: {ex.Message}"); }
+Console.WriteLine();
+
+Console.WriteLine("GOOD (separate interfaces):");
+IWritableStorage fullStore = new FullStorage();
+fullStore.Write("config", "value");
+Console.WriteLine($"  Read: {fullStore.Read("config")}");
+IReadableStorage cacheStore = new CacheStorage();
+Console.WriteLine($"  Cache read: {cacheStore.Read("config")}");
+Console.WriteLine();
+
+// --- I: Interface Segregation ---
+Console.WriteLine("=== I — Interface Segregation ===\n");
+Console.WriteLine("Developer (ICoder + IMeetingAttendee):");
+var dev = new Developer();
+dev.WriteCode();
+dev.ReviewCode();
+dev.AttendMeetings();
+Console.WriteLine();
+
+Console.WriteLine("Team Lead (ICoder + IManager + IMeetingAttendee):");
+var lead = new TeamLead();
+lead.WriteCode();
+lead.ManageTeam();
+lead.AttendMeetings();
+Console.WriteLine();
+
+// --- D: Dependency Inversion ---
+Console.WriteLine("=== D — Dependency Inversion ===\n");
+Console.WriteLine("Swap channels without changing NotificationService:");
+var emailNotifier = new NotificationService(new SmtpChannel());
+emailNotifier.Notify("alice@test.com", "Your order shipped!");
+
+var slackNotifier = new NotificationService(new SlackChannel());
+slackNotifier.Notify("engineering", "Deploy complete!");
+
 // =============================================
 // S — SINGLE RESPONSIBILITY PRINCIPLE
 // =============================================
@@ -284,70 +351,3 @@ public class NotificationService(IMessageChannel channel)
     public void Notify(string recipient, string message) =>
         channel.Send(recipient, message);
 }
-
-// ============================================================================
-// DEMO
-// ============================================================================
-
-Console.WriteLine("=== SOLID PRINCIPLES DEMO ===\n");
-
-// --- S: Single Responsibility ---
-Console.WriteLine("=== S — Single Responsibility ===\n");
-Console.WriteLine("BAD (one class does everything):");
-var badService = new BadOrderService();
-badService.ProcessOrder("ORD-1", 99.99m);
-Console.WriteLine();
-
-Console.WriteLine("GOOD (separated concerns):");
-var goodService = new GoodOrderService(new OrderValidator(), new OrderRepository(), new OrderNotifier());
-goodService.ProcessOrder("ORD-2", 149.99m);
-Console.WriteLine();
-
-// --- O: Open/Closed ---
-Console.WriteLine("=== O — Open/Closed ===\n");
-var calc = new DiscountCalculator();
-calc.Apply(100m, new PercentageDiscount(15));
-calc.Apply(100m, new FixedDiscount(20));
-calc.Apply(100m, new BuyTwoGetOneDiscount());
-Console.WriteLine();
-
-// --- L: Liskov Substitution ---
-Console.WriteLine("=== L — Liskov Substitution ===\n");
-Console.WriteLine("BAD (ReadOnlyStorage throws on Write):");
-BadStorage storage = new BadReadOnlyStorage();
-try { storage.Write("key", "value"); }
-catch (NotSupportedException ex) { Console.WriteLine($"  Caught: {ex.Message}"); }
-Console.WriteLine();
-
-Console.WriteLine("GOOD (separate interfaces):");
-IWritableStorage fullStore = new FullStorage();
-fullStore.Write("config", "value");
-Console.WriteLine($"  Read: {fullStore.Read("config")}");
-IReadableStorage cacheStore = new CacheStorage();
-Console.WriteLine($"  Cache read: {cacheStore.Read("config")}");
-Console.WriteLine();
-
-// --- I: Interface Segregation ---
-Console.WriteLine("=== I — Interface Segregation ===\n");
-Console.WriteLine("Developer (ICoder + IMeetingAttendee):");
-var dev = new Developer();
-dev.WriteCode();
-dev.ReviewCode();
-dev.AttendMeetings();
-Console.WriteLine();
-
-Console.WriteLine("Team Lead (ICoder + IManager + IMeetingAttendee):");
-var lead = new TeamLead();
-lead.WriteCode();
-lead.ManageTeam();
-lead.AttendMeetings();
-Console.WriteLine();
-
-// --- D: Dependency Inversion ---
-Console.WriteLine("=== D — Dependency Inversion ===\n");
-Console.WriteLine("Swap channels without changing NotificationService:");
-var emailNotifier = new NotificationService(new SmtpChannel());
-emailNotifier.Notify("alice@test.com", "Your order shipped!");
-
-var slackNotifier = new NotificationService(new SlackChannel());
-slackNotifier.Notify("engineering", "Deploy complete!");

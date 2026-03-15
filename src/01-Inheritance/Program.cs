@@ -9,106 +9,6 @@
 // for code reuse and establishing "is-a" relationships.
 // ============================================================================
 
-// INTERVIEW ANSWER: The `virtual` keyword on a base class method says "derived classes
-// CAN override this, but they don't have to — there's a sensible default." The `override`
-// keyword in the derived class provides the new implementation.
-
-public class PaymentProcessor
-{
-    public string ProcessorName { get; }
-    public decimal FeePercentage { get; protected set; }
-
-    // INTERVIEW ANSWER: Constructor chaining with `base()` ensures the base class
-    // is properly initialized before the derived class adds its own setup.
-    // The base constructor always runs first.
-    public PaymentProcessor(string name, decimal feePercentage)
-    {
-        ProcessorName = name;
-        FeePercentage = feePercentage;
-    }
-
-    // Virtual method — provides default behavior that can be overridden
-    public virtual PaymentResult ProcessPayment(decimal amount)
-    {
-        var fee = amount * (FeePercentage / 100m);
-        return new PaymentResult(amount, fee, $"Processed by {ProcessorName}");
-    }
-
-    // Non-virtual — derived classes CANNOT override this. This is intentional:
-    // validation logic should be consistent across all processors.
-    public bool ValidateAmount(decimal amount) => amount > 0 && amount <= 50_000m;
-
-    // INTERVIEW ANSWER: `protected` means only this class and its derived classes
-    // can access this member. It's how you expose internals to subclasses without
-    // making them public to everyone.
-    protected void LogTransaction(string message)
-    {
-        Console.WriteLine($"  [{ProcessorName} LOG] {message}");
-    }
-}
-
-// Inheriting from PaymentProcessor — StripeProcessor "is a" PaymentProcessor
-public class StripeProcessor : PaymentProcessor
-{
-    public string ApiVersion { get; }
-
-    // Constructor chaining — call base constructor, then do our own setup
-    public StripeProcessor(string apiVersion)
-        : base("Stripe", 2.9m)
-    {
-        ApiVersion = apiVersion;
-    }
-
-    // Override to add Stripe-specific behavior
-    public override PaymentResult ProcessPayment(decimal amount)
-    {
-        LogTransaction($"Initiating Stripe charge for {amount:C} (API {ApiVersion})");
-        var fee = amount * (FeePercentage / 100m) + 0.30m; // Stripe's per-transaction fee
-        return new PaymentResult(amount, fee, $"Stripe charge successful (API {ApiVersion})");
-    }
-}
-
-public class PayPalProcessor : PaymentProcessor
-{
-    public PayPalProcessor() : base("PayPal", 3.49m) { }
-
-    public override PaymentResult ProcessPayment(decimal amount)
-    {
-        LogTransaction($"Sending PayPal payment request for {amount:C}");
-        var fee = amount * (FeePercentage / 100m) + 0.49m;
-        return new PaymentResult(amount, fee, "PayPal payment completed");
-    }
-}
-
-// INTERVIEW ANSWER: `sealed` prevents any further inheritance. You'd seal a class when
-// you want to guarantee its behavior can't be changed by subclasses — common for
-// security-sensitive code or when the class wasn't designed for extension.
-public sealed class CryptoProcessor : PaymentProcessor
-{
-    public string Network { get; }
-
-    public CryptoProcessor(string network)
-        : base($"Crypto ({network})", 1.0m)
-    {
-        Network = network;
-    }
-
-    public override PaymentResult ProcessPayment(decimal amount)
-    {
-        LogTransaction($"Broadcasting transaction on {Network} network");
-        var fee = amount * (FeePercentage / 100m);
-        return new PaymentResult(amount, fee, $"Crypto payment on {Network} confirmed");
-    }
-}
-
-// This would NOT compile — CryptoProcessor is sealed:
-// public class BitcoinProcessor : CryptoProcessor { }
-
-public record PaymentResult(decimal Amount, decimal Fee, string Message)
-{
-    public decimal NetAmount => Amount - Fee;
-}
-
 // ============================================================================
 // DEMO
 // ============================================================================
@@ -168,3 +68,108 @@ var sp = new StripeProcessor("2024-12-01");
 Console.WriteLine($"  ProcessorName (set by base): {sp.ProcessorName}");
 Console.WriteLine($"  FeePercentage (set by base): {sp.FeePercentage}%");
 Console.WriteLine($"  ApiVersion (set by derived): {sp.ApiVersion}");
+
+// INTERVIEW ANSWER: The `virtual` keyword on a base class method says "derived classes
+// CAN override this, but they don't have to — there's a sensible default." The `override`
+// keyword in the derived class provides the new implementation.
+
+public class PaymentProcessor
+{
+    public string ProcessorName { get; }
+    public decimal FeePercentage { get; protected set; }
+
+    // INTERVIEW ANSWER: Constructor chaining with `base()` ensures the base class
+    // is properly initialized before the derived class adds its own setup.
+    // The base constructor always runs first.
+    public PaymentProcessor(string name, decimal feePercentage)
+    {
+        ProcessorName = name;
+        FeePercentage = feePercentage;
+    }
+
+    // Virtual method — provides default behavior that can be overridden
+    public virtual PaymentResult ProcessPayment(decimal amount)
+    {
+        var fee = amount * (FeePercentage / 100m);
+        return new PaymentResult(amount, fee, $"Processed by {ProcessorName}");
+    }
+
+    // Non-virtual — derived classes CANNOT override this. This is intentional:
+    // validation logic should be consistent across all processors.
+    public bool ValidateAmount(decimal amount) => amount > 0 && amount <= 50_000m;
+
+    // INTERVIEW ANSWER: `protected` means only this class and its derived classes
+    // can access this member. It's how you expose internals to subclasses without
+    // making them public to everyone.
+    protected void LogTransaction(string message)
+    {
+        Console.WriteLine($"  [{ProcessorName} LOG] {message}");
+    }
+}
+
+// Inheriting from PaymentProcessor — StripeProcessor "is a" PaymentProcessor
+public class StripeProcessor : PaymentProcessor
+{
+    public string ApiVersion { get; }
+
+    // Constructor chaining — call base constructor, then do our own setup
+    public StripeProcessor(string apiVersion)
+        : base("Stripe", 2.9m)
+    {
+        ApiVersion = apiVersion;
+    }
+
+    // Override to add Stripe-specific behavior
+    public override PaymentResult ProcessPayment(decimal amount)
+    {
+        LogTransaction($"Initiating Stripe charge for {amount:C} (API {ApiVersion})");
+        var fee = amount * (FeePercentage / 100m) + 0.30m; // Stripe's per-transaction fee
+        return new PaymentResult(amount, fee, $"Stripe charge successful (API {ApiVersion})");
+    }
+
+    public new bool ValidateAmount(decimal amount)
+    {
+        return false;
+    }
+}
+
+public class PayPalProcessor : PaymentProcessor
+{
+    public PayPalProcessor() : base("PayPal", 3.49m) { }
+
+    public override PaymentResult ProcessPayment(decimal amount)
+    {
+        LogTransaction($"Sending PayPal payment request for {amount:C}");
+        var fee = amount * (FeePercentage / 100m) + 0.49m;
+        return new PaymentResult(amount, fee, "PayPal payment completed");
+    }
+}
+
+// INTERVIEW ANSWER: `sealed` prevents any further inheritance. You'd seal a class when
+// you want to guarantee its behavior can't be changed by subclasses — common for
+// security-sensitive code or when the class wasn't designed for extension.
+public sealed class CryptoProcessor : PaymentProcessor
+{
+    public string Network { get; }
+
+    public CryptoProcessor(string network)
+        : base($"Crypto ({network})", 1.0m)
+    {
+        Network = network;
+    }
+
+    public override PaymentResult ProcessPayment(decimal amount)
+    {
+        LogTransaction($"Broadcasting transaction on {Network} network");
+        var fee = amount * (FeePercentage / 100m);
+        return new PaymentResult(amount, fee, $"Crypto payment on {Network} confirmed");
+    }
+}
+
+// This would NOT compile — CryptoProcessor is sealed:
+// public class BitcoinProcessor : CryptoProcessor { }
+
+public record PaymentResult(decimal Amount, decimal Fee, string Message)
+{
+    public decimal NetAmount => Amount - Fee;
+}

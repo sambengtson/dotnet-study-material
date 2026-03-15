@@ -11,6 +11,110 @@
 // whether you need identity vs. value semantics, mutability, and allocation behavior.
 // ============================================================================
 
+// ============================================================================
+// DEMO
+// ============================================================================
+
+Console.WriteLine("=== RECORDS AND VALUE TYPES DEMO ===\n");
+
+// --- Record Value Equality ---
+Console.WriteLine("--- Record Value Equality ---");
+var user1 = new UserProfile("U1", "Alice", "alice@test.com", "Admin");
+var user2 = new UserProfile("U1", "Alice", "alice@test.com", "Admin");
+var user3 = user1 with { Role = "User" };
+
+Console.WriteLine($"  user1: {user1}");
+Console.WriteLine($"  user2: {user2}");
+Console.WriteLine($"  user1 == user2: {user1 == user2} (value equality — same data)");
+Console.WriteLine($"  ReferenceEquals: {ReferenceEquals(user1, user2)} (different objects)");
+Console.WriteLine();
+
+// --- `with` Expressions ---
+Console.WriteLine("--- with Expressions (non-destructive mutation) ---");
+
+// INTERVIEW ANSWER: `with` creates a copy of a record with specified properties
+// changed. The original is untouched. This is how you do "immutable updates" —
+// you never mutate, you create a new version with changes applied.
+Console.WriteLine($"  Original: {user1}");
+Console.WriteLine($"  Modified: {user3}");
+Console.WriteLine($"  Original unchanged: {user1.Role}");
+Console.WriteLine();
+
+// --- Class vs Record Equality ---
+Console.WriteLine("--- Class vs Record Equality ---");
+var classA = new UserClass { Id = "1", Name = "Bob" };
+var classB = new UserClass { Id = "1", Name = "Bob" };
+var recordA = new UserRecord("1", "Bob");
+var recordB = new UserRecord("1", "Bob");
+
+Console.WriteLine($"  Class:  classA == classB:   {classA == classB} (reference equality)");
+Console.WriteLine($"  Record: recordA == recordB: {recordA == recordB} (value equality)");
+Console.WriteLine();
+
+// --- Record Deconstruction ---
+Console.WriteLine("--- Record Deconstruction ---");
+var (id, name, email, role) = user1;
+Console.WriteLine($"  Deconstructed: id={id}, name={name}, email={email}, role={role}");
+Console.WriteLine();
+
+// --- Record Struct ---
+Console.WriteLine("--- Record Struct (value type + record features) ---");
+var price1 = new Money(29.99m, "USD");
+var price2 = new Money(29.99m, "USD");
+var price3 = new Money(15.00m, "USD");
+
+Console.WriteLine($"  price1: {price1}");
+Console.WriteLine($"  price1 == price2: {price1 == price2} (value equality)");
+Console.WriteLine($"  price1 + price3: {price1 + price3}");
+Console.WriteLine($"  price1 * 3: {price1 * 3}");
+Console.WriteLine();
+
+var coord1 = new GeoCoordinate(40.7128, -74.0060); // NYC
+var coord2 = new GeoCoordinate(34.0522, -118.2437); // LA
+Console.WriteLine($"  NYC: {coord1}");
+Console.WriteLine($"  LA: {coord2}");
+Console.WriteLine($"  Distance: {coord1.DistanceTo(coord2):F2} degrees");
+Console.WriteLine();
+
+// --- Readonly Struct ---
+Console.WriteLine("--- Struct vs Readonly Struct ---");
+var mutable = new MutablePoint { X = 1, Y = 2 };
+mutable.Move(3, 4);
+Console.WriteLine($"  MutablePoint after Move: ({mutable.X}, {mutable.Y})");
+
+var immutable = new ImmutablePoint(1, 2);
+var moved = immutable.MovedBy(3, 4);
+Console.WriteLine($"  ImmutablePoint original: {immutable}");
+Console.WriteLine($"  ImmutablePoint moved: {moved} (new instance)");
+Console.WriteLine();
+
+// --- Ref Struct (Span<T>) ---
+Console.WriteLine("--- Ref Struct and Span<T> ---");
+
+// Span<T> usage — zero-allocation string manipulation
+Span<int> numbers = stackalloc int[] { 10, 20, 30, 40, 50 };
+var slice = numbers[1..4]; // [20, 30, 40] — no copy
+Console.WriteLine($"  Span slice [1..4]: [{string.Join(", ", slice.ToArray())}]");
+
+// Modify through span — changes the original
+slice[0] = 99;
+Console.WriteLine($"  After modifying slice[0]=99, original[1]: {numbers[1]}");
+Console.WriteLine();
+
+// Custom ref struct
+Console.WriteLine("--- Custom Ref Struct: TokenParser ---");
+var parser = new TokenParser("host=localhost;port=5432;db=myapp;user=admin".AsSpan());
+while (parser.HasMore)
+{
+    var token = parser.NextToken(';');
+    Console.WriteLine($"  Token: {token}");
+}
+Console.WriteLine($"  Total tokens: {parser.TokenCount}");
+
+// INTERVIEW ANSWER: ref structs are a trade-off. You get zero GC pressure and
+// direct memory access, but you can't use them in async code, store them in
+// collections, or box them. Use them in hot paths where allocation matters.
+
 // --- record class (reference type, value equality) ---
 
 // INTERVIEW ANSWER: A positional record like this gives you a constructor,
@@ -131,107 +235,3 @@ public ref struct TokenParser
 
     public bool HasMore => !_remaining.IsEmpty;
 }
-
-// ============================================================================
-// DEMO
-// ============================================================================
-
-Console.WriteLine("=== RECORDS AND VALUE TYPES DEMO ===\n");
-
-// --- Record Value Equality ---
-Console.WriteLine("--- Record Value Equality ---");
-var user1 = new UserProfile("U1", "Alice", "alice@test.com", "Admin");
-var user2 = new UserProfile("U1", "Alice", "alice@test.com", "Admin");
-var user3 = user1 with { Role = "User" };
-
-Console.WriteLine($"  user1: {user1}");
-Console.WriteLine($"  user2: {user2}");
-Console.WriteLine($"  user1 == user2: {user1 == user2} (value equality — same data)");
-Console.WriteLine($"  ReferenceEquals: {ReferenceEquals(user1, user2)} (different objects)");
-Console.WriteLine();
-
-// --- `with` Expressions ---
-Console.WriteLine("--- with Expressions (non-destructive mutation) ---");
-
-// INTERVIEW ANSWER: `with` creates a copy of a record with specified properties
-// changed. The original is untouched. This is how you do "immutable updates" —
-// you never mutate, you create a new version with changes applied.
-Console.WriteLine($"  Original: {user1}");
-Console.WriteLine($"  Modified: {user3}");
-Console.WriteLine($"  Original unchanged: {user1.Role}");
-Console.WriteLine();
-
-// --- Class vs Record Equality ---
-Console.WriteLine("--- Class vs Record Equality ---");
-var classA = new UserClass { Id = "1", Name = "Bob" };
-var classB = new UserClass { Id = "1", Name = "Bob" };
-var recordA = new UserRecord("1", "Bob");
-var recordB = new UserRecord("1", "Bob");
-
-Console.WriteLine($"  Class:  classA == classB:   {classA == classB} (reference equality)");
-Console.WriteLine($"  Record: recordA == recordB: {recordA == recordB} (value equality)");
-Console.WriteLine();
-
-// --- Record Deconstruction ---
-Console.WriteLine("--- Record Deconstruction ---");
-var (id, name, email, role) = user1;
-Console.WriteLine($"  Deconstructed: id={id}, name={name}, email={email}, role={role}");
-Console.WriteLine();
-
-// --- Record Struct ---
-Console.WriteLine("--- Record Struct (value type + record features) ---");
-var price1 = new Money(29.99m, "USD");
-var price2 = new Money(29.99m, "USD");
-var price3 = new Money(15.00m, "USD");
-
-Console.WriteLine($"  price1: {price1}");
-Console.WriteLine($"  price1 == price2: {price1 == price2} (value equality)");
-Console.WriteLine($"  price1 + price3: {price1 + price3}");
-Console.WriteLine($"  price1 * 3: {price1 * 3}");
-Console.WriteLine();
-
-var coord1 = new GeoCoordinate(40.7128, -74.0060); // NYC
-var coord2 = new GeoCoordinate(34.0522, -118.2437); // LA
-Console.WriteLine($"  NYC: {coord1}");
-Console.WriteLine($"  LA: {coord2}");
-Console.WriteLine($"  Distance: {coord1.DistanceTo(coord2):F2} degrees");
-Console.WriteLine();
-
-// --- Readonly Struct ---
-Console.WriteLine("--- Struct vs Readonly Struct ---");
-var mutable = new MutablePoint { X = 1, Y = 2 };
-mutable.Move(3, 4);
-Console.WriteLine($"  MutablePoint after Move: ({mutable.X}, {mutable.Y})");
-
-var immutable = new ImmutablePoint(1, 2);
-var moved = immutable.MovedBy(3, 4);
-Console.WriteLine($"  ImmutablePoint original: {immutable}");
-Console.WriteLine($"  ImmutablePoint moved: {moved} (new instance)");
-Console.WriteLine();
-
-// --- Ref Struct (Span<T>) ---
-Console.WriteLine("--- Ref Struct and Span<T> ---");
-
-// Span<T> usage — zero-allocation string manipulation
-Span<int> numbers = stackalloc int[] { 10, 20, 30, 40, 50 };
-var slice = numbers[1..4]; // [20, 30, 40] — no copy
-Console.WriteLine($"  Span slice [1..4]: [{string.Join(", ", slice.ToArray())}]");
-
-// Modify through span — changes the original
-slice[0] = 99;
-Console.WriteLine($"  After modifying slice[0]=99, original[1]: {numbers[1]}");
-Console.WriteLine();
-
-// Custom ref struct
-Console.WriteLine("--- Custom Ref Struct: TokenParser ---");
-var parser = new TokenParser("host=localhost;port=5432;db=myapp;user=admin".AsSpan());
-while (parser.HasMore)
-{
-    var token = parser.NextToken(';');
-    Console.WriteLine($"  Token: {token}");
-}
-Console.WriteLine($"  Total tokens: {parser.TokenCount}");
-
-// INTERVIEW ANSWER: ref structs are a trade-off. You get zero GC pressure and
-// direct memory access, but you can't use them in async code, store them in
-// collections, or box them. Use them in hot paths where allocation matters.

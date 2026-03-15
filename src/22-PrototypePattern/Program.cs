@@ -11,6 +11,89 @@
 // object and doesn't distinguish between shallow and deep copies.
 // ============================================================================
 
+// ============================================================================
+// DEMO
+// ============================================================================
+
+Console.WriteLine("=== PROTOTYPE PATTERN DEMO ===\n");
+
+// --- Shallow vs Deep Copy ---
+Console.WriteLine("--- Shallow vs Deep Copy Pitfall ---");
+var original = new ShallowCopyExample("Original");
+original.Items.AddRange(["Item A", "Item B"]);
+
+var shallowClone = original.ShallowClone();
+shallowClone.Name = "Shallow Clone";
+shallowClone.Items.Add("Item C");  // Modifies BOTH because list is shared
+
+Console.WriteLine($"  Original items: [{string.Join(", ", original.Items)}]");
+Console.WriteLine($"  Shallow clone items: [{string.Join(", ", shallowClone.Items)}]");
+Console.WriteLine($"  Same list? {ReferenceEquals(original.Items, shallowClone.Items)}");
+
+var deepClone = original.DeepClone();
+deepClone.Name = "Deep Clone";
+deepClone.Items.Add("Item D");
+
+Console.WriteLine($"\n  Original items after deep clone: [{string.Join(", ", original.Items)}]");
+Console.WriteLine($"  Deep clone items: [{string.Join(", ", deepClone.Items)}]");
+Console.WriteLine($"  Same list? {ReferenceEquals(original.Items, deepClone.Items)}");
+
+// --- Template cloning ---
+Console.WriteLine("\n--- Document Template Cloning ---");
+var invoiceTemplate = new DocumentTemplate("Invoice", "Finance Dept");
+invoiceTemplate.AddSection("Header", "Company Name, Address, Invoice Number");
+invoiceTemplate.AddSection("Line Items", "Description | Qty | Price | Total");
+invoiceTemplate.AddSection("Footer", "Payment terms, bank details, due date");
+invoiceTemplate.Metadata.Tags.AddRange(["finance", "invoice", "template"]);
+
+Console.WriteLine("Original template:");
+invoiceTemplate.Describe();
+
+// Clone and customize
+var januaryInvoice = invoiceTemplate.DeepClone();
+januaryInvoice.Title = "Invoice - January 2025";
+januaryInvoice.Sections[0].Content = "Acme Corp, 123 Main St, INV-2025-001";
+januaryInvoice.Metadata.Tags.Add("january");
+januaryInvoice.Metadata.Version = "1.1";
+
+Console.WriteLine("\nCloned & customized:");
+januaryInvoice.Describe();
+
+Console.WriteLine("\nOriginal unchanged:");
+invoiceTemplate.Describe();
+
+// --- Prototype Registry ---
+Console.WriteLine("\n--- Prototype Registry ---");
+var registry = new TemplateRegistry();
+
+var reportTemplate = new DocumentTemplate("Quarterly Report", "Analytics Team");
+reportTemplate.AddSection("Executive Summary", "Key findings and metrics overview");
+reportTemplate.AddSection("Performance Data", "Charts, graphs, and detailed numbers");
+reportTemplate.AddSection("Recommendations", "Action items based on the data");
+reportTemplate.Metadata.Tags.AddRange(["report", "quarterly"]);
+
+var memoTemplate = new DocumentTemplate("Internal Memo", "HR Department");
+memoTemplate.AddSection("Subject", "Topic of the memo");
+memoTemplate.AddSection("Body", "Detailed message content");
+memoTemplate.Metadata.Tags.AddRange(["memo", "internal"]);
+
+registry.Register("invoice", invoiceTemplate);
+registry.Register("report", reportTemplate);
+registry.Register("memo", memoTemplate);
+
+Console.WriteLine($"  Available templates: [{string.Join(", ", registry.AvailableTemplates)}]\n");
+
+// Create documents from templates
+var myReport = registry.Create("report");
+myReport.Title = "Q4 2024 Performance Report";
+myReport.Author = "Data Analytics";
+myReport.Metadata.Version = "2.0";
+Console.WriteLine("Created from 'report' template:");
+myReport.Describe();
+
+Console.WriteLine("\nOriginal report template unchanged:");
+reportTemplate.Describe();
+
 // --- Prototype interface ---
 
 public interface IPrototype<T> where T : IPrototype<T>
@@ -144,86 +227,3 @@ public class ShallowCopyExample
         return clone;
     }
 }
-
-// ============================================================================
-// DEMO
-// ============================================================================
-
-Console.WriteLine("=== PROTOTYPE PATTERN DEMO ===\n");
-
-// --- Shallow vs Deep Copy ---
-Console.WriteLine("--- Shallow vs Deep Copy Pitfall ---");
-var original = new ShallowCopyExample("Original");
-original.Items.AddRange(["Item A", "Item B"]);
-
-var shallowClone = original.ShallowClone();
-shallowClone.Name = "Shallow Clone";
-shallowClone.Items.Add("Item C");  // Modifies BOTH because list is shared
-
-Console.WriteLine($"  Original items: [{string.Join(", ", original.Items)}]");
-Console.WriteLine($"  Shallow clone items: [{string.Join(", ", shallowClone.Items)}]");
-Console.WriteLine($"  Same list? {ReferenceEquals(original.Items, shallowClone.Items)}");
-
-var deepClone = original.DeepClone();
-deepClone.Name = "Deep Clone";
-deepClone.Items.Add("Item D");
-
-Console.WriteLine($"\n  Original items after deep clone: [{string.Join(", ", original.Items)}]");
-Console.WriteLine($"  Deep clone items: [{string.Join(", ", deepClone.Items)}]");
-Console.WriteLine($"  Same list? {ReferenceEquals(original.Items, deepClone.Items)}");
-
-// --- Template cloning ---
-Console.WriteLine("\n--- Document Template Cloning ---");
-var invoiceTemplate = new DocumentTemplate("Invoice", "Finance Dept");
-invoiceTemplate.AddSection("Header", "Company Name, Address, Invoice Number");
-invoiceTemplate.AddSection("Line Items", "Description | Qty | Price | Total");
-invoiceTemplate.AddSection("Footer", "Payment terms, bank details, due date");
-invoiceTemplate.Metadata.Tags.AddRange(["finance", "invoice", "template"]);
-
-Console.WriteLine("Original template:");
-invoiceTemplate.Describe();
-
-// Clone and customize
-var januaryInvoice = invoiceTemplate.DeepClone();
-januaryInvoice.Title = "Invoice - January 2025";
-januaryInvoice.Sections[0].Content = "Acme Corp, 123 Main St, INV-2025-001";
-januaryInvoice.Metadata.Tags.Add("january");
-januaryInvoice.Metadata.Version = "1.1";
-
-Console.WriteLine("\nCloned & customized:");
-januaryInvoice.Describe();
-
-Console.WriteLine("\nOriginal unchanged:");
-invoiceTemplate.Describe();
-
-// --- Prototype Registry ---
-Console.WriteLine("\n--- Prototype Registry ---");
-var registry = new TemplateRegistry();
-
-var reportTemplate = new DocumentTemplate("Quarterly Report", "Analytics Team");
-reportTemplate.AddSection("Executive Summary", "Key findings and metrics overview");
-reportTemplate.AddSection("Performance Data", "Charts, graphs, and detailed numbers");
-reportTemplate.AddSection("Recommendations", "Action items based on the data");
-reportTemplate.Metadata.Tags.AddRange(["report", "quarterly"]);
-
-var memoTemplate = new DocumentTemplate("Internal Memo", "HR Department");
-memoTemplate.AddSection("Subject", "Topic of the memo");
-memoTemplate.AddSection("Body", "Detailed message content");
-memoTemplate.Metadata.Tags.AddRange(["memo", "internal"]);
-
-registry.Register("invoice", invoiceTemplate);
-registry.Register("report", reportTemplate);
-registry.Register("memo", memoTemplate);
-
-Console.WriteLine($"  Available templates: [{string.Join(", ", registry.AvailableTemplates)}]\n");
-
-// Create documents from templates
-var myReport = registry.Create("report");
-myReport.Title = "Q4 2024 Performance Report";
-myReport.Author = "Data Analytics";
-myReport.Metadata.Version = "2.0";
-Console.WriteLine("Created from 'report' template:");
-myReport.Describe();
-
-Console.WriteLine("\nOriginal report template unchanged:");
-reportTemplate.Describe();

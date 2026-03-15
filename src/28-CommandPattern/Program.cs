@@ -11,6 +11,79 @@
 // that knows how to perform it.
 // ============================================================================
 
+// ============================================================================
+// DEMO
+// ============================================================================
+
+Console.WriteLine("=== COMMAND PATTERN DEMO ===\n");
+
+// --- Basic undo/redo ---
+Console.WriteLine("--- Text Editor with Undo/Redo ---");
+var doc = new TextDocument();
+var history = new CommandHistory();
+
+history.Execute(new InsertTextCommand(doc, 0, "Hello World"));
+Console.WriteLine($"  Doc: \"{doc}\"\n");
+
+history.Execute(new InsertTextCommand(doc, 5, ", Beautiful"));
+Console.WriteLine($"  Doc: \"{doc}\"\n");
+
+history.Execute(new ReplaceTextCommand(doc, "World", "C# Developers"));
+Console.WriteLine($"  Doc: \"{doc}\"\n");
+
+history.Execute(new DeleteTextCommand(doc, 0, 6));
+Console.WriteLine($"  Doc: \"{doc}\"\n");
+
+// Undo chain
+Console.WriteLine("--- Undo x3 ---");
+history.Undo();
+Console.WriteLine($"  Doc: \"{doc}\"");
+history.Undo();
+Console.WriteLine($"  Doc: \"{doc}\"");
+history.Undo();
+Console.WriteLine($"  Doc: \"{doc}\"");
+
+// Redo
+Console.WriteLine($"\n--- Redo x2 ---");
+history.Redo();
+Console.WriteLine($"  Doc: \"{doc}\"");
+history.Redo();
+Console.WriteLine($"  Doc: \"{doc}\"");
+
+Console.WriteLine($"\n  Undo stack: {history.UndoCount}, Redo stack: {history.RedoCount}");
+
+// --- Macro command ---
+Console.WriteLine("\n--- Macro Command ---");
+var doc2 = new TextDocument();
+var history2 = new CommandHistory();
+
+var macro = new MacroCommand("Insert formatted header",
+    new InsertTextCommand(doc2, 0, "=== "),
+    new InsertTextCommand(doc2, 4, "DESIGN PATTERNS"),
+    new InsertTextCommand(doc2, 19, " ==="));
+
+history2.Execute(macro);
+Console.WriteLine($"  Doc: \"{doc2}\"\n");
+
+history2.Undo();
+Console.WriteLine($"  After undo macro: \"{doc2}\"");
+
+history2.Redo();
+Console.WriteLine($"  After redo macro: \"{doc2}\"");
+
+// --- Command queue ---
+Console.WriteLine("\n--- Command Queue (Deferred Execution) ---");
+var doc3 = new TextDocument();
+var queue = new CommandQueue();
+
+queue.Enqueue(new InsertTextCommand(doc3, 0, "First. "));
+queue.Enqueue(new InsertTextCommand(doc3, 7, "Second. "));
+queue.Enqueue(new InsertTextCommand(doc3, 15, "Third."));
+
+Console.WriteLine($"\n  Doc before processing: \"{doc3}\"");
+queue.ProcessAll();
+Console.WriteLine($"  Doc after processing: \"{doc3}\"");
+
 // --- Command interface ---
 
 public interface ICommand
@@ -221,76 +294,3 @@ public class CommandQueue
         }
     }
 }
-
-// ============================================================================
-// DEMO
-// ============================================================================
-
-Console.WriteLine("=== COMMAND PATTERN DEMO ===\n");
-
-// --- Basic undo/redo ---
-Console.WriteLine("--- Text Editor with Undo/Redo ---");
-var doc = new TextDocument();
-var history = new CommandHistory();
-
-history.Execute(new InsertTextCommand(doc, 0, "Hello World"));
-Console.WriteLine($"  Doc: \"{doc}\"\n");
-
-history.Execute(new InsertTextCommand(doc, 5, ", Beautiful"));
-Console.WriteLine($"  Doc: \"{doc}\"\n");
-
-history.Execute(new ReplaceTextCommand(doc, "World", "C# Developers"));
-Console.WriteLine($"  Doc: \"{doc}\"\n");
-
-history.Execute(new DeleteTextCommand(doc, 0, 6));
-Console.WriteLine($"  Doc: \"{doc}\"\n");
-
-// Undo chain
-Console.WriteLine("--- Undo x3 ---");
-history.Undo();
-Console.WriteLine($"  Doc: \"{doc}\"");
-history.Undo();
-Console.WriteLine($"  Doc: \"{doc}\"");
-history.Undo();
-Console.WriteLine($"  Doc: \"{doc}\"");
-
-// Redo
-Console.WriteLine($"\n--- Redo x2 ---");
-history.Redo();
-Console.WriteLine($"  Doc: \"{doc}\"");
-history.Redo();
-Console.WriteLine($"  Doc: \"{doc}\"");
-
-Console.WriteLine($"\n  Undo stack: {history.UndoCount}, Redo stack: {history.RedoCount}");
-
-// --- Macro command ---
-Console.WriteLine("\n--- Macro Command ---");
-var doc2 = new TextDocument();
-var history2 = new CommandHistory();
-
-var macro = new MacroCommand("Insert formatted header",
-    new InsertTextCommand(doc2, 0, "=== "),
-    new InsertTextCommand(doc2, 4, "DESIGN PATTERNS"),
-    new InsertTextCommand(doc2, 19, " ==="));
-
-history2.Execute(macro);
-Console.WriteLine($"  Doc: \"{doc2}\"\n");
-
-history2.Undo();
-Console.WriteLine($"  After undo macro: \"{doc2}\"");
-
-history2.Redo();
-Console.WriteLine($"  After redo macro: \"{doc2}\"");
-
-// --- Command queue ---
-Console.WriteLine("\n--- Command Queue (Deferred Execution) ---");
-var doc3 = new TextDocument();
-var queue = new CommandQueue();
-
-queue.Enqueue(new InsertTextCommand(doc3, 0, "First. "));
-queue.Enqueue(new InsertTextCommand(doc3, 7, "Second. "));
-queue.Enqueue(new InsertTextCommand(doc3, 15, "Third."));
-
-Console.WriteLine($"\n  Doc before processing: \"{doc3}\"");
-queue.ProcessAll();
-Console.WriteLine($"  Doc after processing: \"{doc3}\"");

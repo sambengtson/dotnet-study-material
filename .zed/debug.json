@@ -1,0 +1,13 @@
+[
+  {
+    "label": "03-Abstraction",
+    "adapter": "netcoredbg",
+    "request": "launch",
+    "program": "${ZED_WORKTREE_ROOT}/src/03-Abstraction/bin/Debug/net10.0/03-Abstraction.dll",
+    "cwd": "${ZED_WORKTREE_ROOT}/src/03-Abstraction",
+    "build": {
+      "command": "dotnet",
+      "args": ["build", "${ZED_WORKTREE_ROOT}/src/03-Abstraction"]
+    }
+  }
+]

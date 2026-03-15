@@ -10,6 +10,66 @@
 // of features, you compose them at runtime.
 // ============================================================================
 
+// ============================================================================
+// DEMO
+// ============================================================================
+
+Console.WriteLine("=== DECORATOR PATTERN DEMO ===\n");
+
+// --- Plain notification ---
+Console.WriteLine("--- Plain Email ---");
+INotificationSender sender = new EmailNotificationSender();
+sender.Send("alice@example.com", "Your order has shipped");
+
+// --- Single decorator ---
+Console.WriteLine("\n--- Email + Logging ---");
+sender = new LoggingDecorator(new EmailNotificationSender());
+sender.Send("bob@example.com", "Welcome to our platform");
+
+// --- Stacked decorators ---
+Console.WriteLine("\n--- SMS + Logging + Retry ---");
+sender = new LoggingDecorator(
+            new RetryDecorator(
+                new SmsNotificationSender(), maxRetries: 2));
+sender.Send("+15551234567", "Your verification code is 483921");
+
+// --- Full stack: Encrypt → RateLimit → Log → Email ---
+Console.WriteLine("\n--- Full Stack: Encrypt → RateLimit → Log → Email ---");
+sender = new EncryptionDecorator(
+            new RateLimitDecorator(
+                new LoggingDecorator(
+                    new EmailNotificationSender()),
+                cooldown: TimeSpan.FromSeconds(5)));
+
+sender.Send("secure@example.com", "Secret message");
+
+Console.WriteLine("\n  Sending again immediately (should be rate-limited):");
+sender.Send("secure@example.com", "Another secret");
+
+Console.WriteLine("\n  Sending to different recipient (should go through):");
+sender.Send("other@example.com", "Different recipient");
+
+// --- Data pipeline ---
+Console.WriteLine("\n--- Data Pipeline (Stream-like) ---");
+IDataReader reader = new PrefixDecorator(
+                        new TrimDecorator(
+                            new UpperCaseDecorator(
+                                new FileDataReader("  hello world, this is a long message from the file system  ")),
+                            maxLength: 30),
+                        prefix: "[DATA] ");
+
+Console.WriteLine($"  Result: {reader.Read()}");
+
+// Show how composition order matters
+IDataReader reader2 = new UpperCaseDecorator(
+                        new PrefixDecorator(
+                            new TrimDecorator(
+                                new FileDataReader("  hello world, this is a long message from the file system  "),
+                                maxLength: 30),
+                            prefix: "[data] "));
+
+Console.WriteLine($"  Different order: {reader2.Read()}");
+
 // --- Component interface ---
 
 public interface INotificationSender
@@ -181,63 +241,3 @@ public class PrefixDecorator : IDataReader
     public PrefixDecorator(IDataReader inner, string prefix) { _inner = inner; _prefix = prefix; }
     public string Read() => $"{_prefix}{_inner.Read()}";
 }
-
-// ============================================================================
-// DEMO
-// ============================================================================
-
-Console.WriteLine("=== DECORATOR PATTERN DEMO ===\n");
-
-// --- Plain notification ---
-Console.WriteLine("--- Plain Email ---");
-INotificationSender sender = new EmailNotificationSender();
-sender.Send("alice@example.com", "Your order has shipped");
-
-// --- Single decorator ---
-Console.WriteLine("\n--- Email + Logging ---");
-sender = new LoggingDecorator(new EmailNotificationSender());
-sender.Send("bob@example.com", "Welcome to our platform");
-
-// --- Stacked decorators ---
-Console.WriteLine("\n--- SMS + Logging + Retry ---");
-sender = new LoggingDecorator(
-            new RetryDecorator(
-                new SmsNotificationSender(), maxRetries: 2));
-sender.Send("+15551234567", "Your verification code is 483921");
-
-// --- Full stack: Encrypt → RateLimit → Log → Email ---
-Console.WriteLine("\n--- Full Stack: Encrypt → RateLimit → Log → Email ---");
-sender = new EncryptionDecorator(
-            new RateLimitDecorator(
-                new LoggingDecorator(
-                    new EmailNotificationSender()),
-                cooldown: TimeSpan.FromSeconds(5)));
-
-sender.Send("secure@example.com", "Secret message");
-
-Console.WriteLine("\n  Sending again immediately (should be rate-limited):");
-sender.Send("secure@example.com", "Another secret");
-
-Console.WriteLine("\n  Sending to different recipient (should go through):");
-sender.Send("other@example.com", "Different recipient");
-
-// --- Data pipeline ---
-Console.WriteLine("\n--- Data Pipeline (Stream-like) ---");
-IDataReader reader = new PrefixDecorator(
-                        new TrimDecorator(
-                            new UpperCaseDecorator(
-                                new FileDataReader("  hello world, this is a long message from the file system  ")),
-                            maxLength: 30),
-                        prefix: "[DATA] ");
-
-Console.WriteLine($"  Result: {reader.Read()}");
-
-// Show how composition order matters
-IDataReader reader2 = new UpperCaseDecorator(
-                        new PrefixDecorator(
-                            new TrimDecorator(
-                                new FileDataReader("  hello world, this is a long message from the file system  "),
-                                maxLength: 30),
-                            prefix: "[data] "));
-
-Console.WriteLine($"  Different order: {reader2.Read()}");

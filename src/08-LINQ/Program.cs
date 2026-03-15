@@ -13,14 +13,6 @@
 
 // --- Sample data ---
 
-public record Employee(
-    string Id, string Name, string Department, decimal Salary,
-    DateTime HireDate, string? ManagerId = null);
-
-public record Project(string Id, string Name, string LeadId, string Department);
-
-public record Assignment(string EmployeeId, string ProjectId, int HoursPerWeek);
-
 // Build our dataset
 var employees = new List<Employee>
 {
@@ -190,6 +182,14 @@ var report = employees
     .Select(e => $"{e.Name} ({e.HireDate:yyyy})")
     .ToList();
 Console.WriteLine($"  Recent Engineering hires: {string.Join(", ", report)}");
+
+public record Employee(
+    string Id, string Name, string Department, decimal Salary,
+    DateTime HireDate, string? ManagerId = null);
+
+public record Project(string Id, string Name, string LeadId, string Department);
+
+public record Assignment(string EmployeeId, string ProjectId, int HoursPerWeek);
 
 // --- Custom extension methods ---
 

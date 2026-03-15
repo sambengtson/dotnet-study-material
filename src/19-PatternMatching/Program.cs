@@ -10,18 +10,6 @@
 // also enable exhaustiveness checking — the compiler can warn you if you miss a case.
 // ============================================================================
 
-// --- Types for pattern matching examples ---
-
-public abstract record HttpResponse(int StatusCode, string Body);
-public record SuccessResponse(int StatusCode, string Body, string ContentType) : HttpResponse(StatusCode, Body);
-public record ErrorResponse(int StatusCode, string Body, string ErrorCode) : HttpResponse(StatusCode, Body);
-public record RedirectResponse(int StatusCode, string Body, string Location) : HttpResponse(StatusCode, Body);
-
-public record Order(string Id, decimal Amount, string Status, string? CouponCode, Address ShippingAddress);
-public record Address(string Country, string State, string City, string Zip);
-
-public record SensorReading(string SensorId, string Type, double Value, DateTime Timestamp);
-
 // ============================================================================
 // DEMO
 // ============================================================================
@@ -225,3 +213,15 @@ foreach (var status in statuses)
     };
     Console.WriteLine($"  {status} → {emoji}");
 }
+
+// --- Types for pattern matching examples ---
+
+public abstract record HttpResponse(int StatusCode, string Body);
+public record SuccessResponse(int StatusCode, string Body, string ContentType) : HttpResponse(StatusCode, Body);
+public record ErrorResponse(int StatusCode, string Body, string ErrorCode) : HttpResponse(StatusCode, Body);
+public record RedirectResponse(int StatusCode, string Body, string Location) : HttpResponse(StatusCode, Body);
+
+public record Order(string Id, decimal Amount, string Status, string? CouponCode, Address ShippingAddress);
+public record Address(string Country, string State, string City, string Zip);
+
+public record SensorReading(string SensorId, string Type, double Value, DateTime Timestamp);

@@ -10,6 +10,52 @@
 // that produce compatible objects).
 // ============================================================================
 
+// ============================================================================
+// DEMO
+// ============================================================================
+
+Console.WriteLine("=== FACTORY PATTERN DEMO ===\n");
+
+// --- Factory Method ---
+Console.WriteLine("--- Factory Method: PaymentGatewayFactory ---\n");
+
+string[] providers = ["Stripe", "PayPal", "Square"];
+foreach (var provider in providers)
+{
+    var gateway = PaymentGatewayFactory.Create(provider);
+    var chargeResult = await gateway.ChargeAsync(99.99m, "USD");
+    Console.WriteLine($"  Result: {chargeResult}\n");
+}
+
+// Runtime selection based on region
+Console.WriteLine("--- Factory Method: Region-based Selection ---\n");
+string[] regions = ["US", "EU", "APAC"];
+foreach (var region in regions)
+{
+    var gateway = PaymentGatewayFactory.CreateForRegion(region);
+    Console.WriteLine($"  Region {region} → {gateway.Name}");
+    await gateway.ChargeAsync(50m, "USD");
+    Console.WriteLine();
+}
+
+// --- Abstract Factory ---
+Console.WriteLine("--- Abstract Factory: Cloud Services ---\n");
+
+ICloudServiceFactory[] factories = [new AwsServiceFactory(), new AzureServiceFactory()];
+
+foreach (var factory in factories)
+{
+    Console.WriteLine($"Using {factory.CloudProvider}:");
+    var fulfillment = new OrderFulfillmentService(factory);
+    await fulfillment.FulfillOrderAsync("ORD-12345", "customer@example.com");
+    Console.WriteLine();
+}
+
+// INTERVIEW ANSWER: The beauty of Abstract Factory is that OrderFulfillmentService
+// doesn't import or reference any AWS or Azure classes directly. It works entirely
+// through the ICloudServiceFactory interface. Switching cloud providers is just
+// swapping which factory you pass in — zero changes to business logic.
+
 // --- Products ---
 
 public interface IPaymentGateway
@@ -228,49 +274,3 @@ public class OrderFulfillmentService(ICloudServiceFactory cloudFactory)
         await notification.SendAsync(customerEmail, $"Order {orderId} confirmed!");
     }
 }
-
-// ============================================================================
-// DEMO
-// ============================================================================
-
-Console.WriteLine("=== FACTORY PATTERN DEMO ===\n");
-
-// --- Factory Method ---
-Console.WriteLine("--- Factory Method: PaymentGatewayFactory ---\n");
-
-string[] providers = ["Stripe", "PayPal", "Square"];
-foreach (var provider in providers)
-{
-    var gateway = PaymentGatewayFactory.Create(provider);
-    var chargeResult = await gateway.ChargeAsync(99.99m, "USD");
-    Console.WriteLine($"  Result: {chargeResult}\n");
-}
-
-// Runtime selection based on region
-Console.WriteLine("--- Factory Method: Region-based Selection ---\n");
-string[] regions = ["US", "EU", "APAC"];
-foreach (var region in regions)
-{
-    var gateway = PaymentGatewayFactory.CreateForRegion(region);
-    Console.WriteLine($"  Region {region} → {gateway.Name}");
-    await gateway.ChargeAsync(50m, "USD");
-    Console.WriteLine();
-}
-
-// --- Abstract Factory ---
-Console.WriteLine("--- Abstract Factory: Cloud Services ---\n");
-
-ICloudServiceFactory[] factories = [new AwsServiceFactory(), new AzureServiceFactory()];
-
-foreach (var factory in factories)
-{
-    Console.WriteLine($"Using {factory.CloudProvider}:");
-    var fulfillment = new OrderFulfillmentService(factory);
-    await fulfillment.FulfillOrderAsync("ORD-12345", "customer@example.com");
-    Console.WriteLine();
-}
-
-// INTERVIEW ANSWER: The beauty of Abstract Factory is that OrderFulfillmentService
-// doesn't import or reference any AWS or Azure classes directly. It works entirely
-// through the ICloudServiceFactory interface. Switching cloud providers is just
-// swapping which factory you pass in — zero changes to business logic.

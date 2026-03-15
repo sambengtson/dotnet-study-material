@@ -12,6 +12,111 @@
 
 using Microsoft.Extensions.DependencyInjection;
 
+// ============================================================================
+// DEMO
+// ============================================================================
+
+Console.WriteLine("=== DEPENDENCY INJECTION DEMO ===\n");
+
+// --- Setting up the DI Container ---
+Console.WriteLine("--- Setting Up DI Container ---\n");
+
+// INTERVIEW ANSWER: The DI container manages object creation and lifetimes.
+// You register services with their interfaces, specifying the lifetime:
+// - Transient: new instance every time it's requested
+// - Scoped: one instance per scope (per request in web apps)
+// - Singleton: one instance for the entire application lifetime
+
+var services = new ServiceCollection();
+
+// Singleton — one instance shared everywhere
+services.AddSingleton<ILogger, ConsoleLogger>();
+
+// Scoped — one instance per scope (we'll create scopes manually)
+services.AddScoped<IUserRepository, InMemoryUserRepository>();
+
+// Transient — new instance every time
+services.AddTransient<IEmailService, ConsoleEmailService>();
+
+// Register the service itself
+services.AddScoped<UserRegistrationService>();
+
+var serviceProvider = services.BuildServiceProvider();
+
+// --- Demonstrate Lifetimes ---
+Console.WriteLine("\n--- Lifetime Differences ---\n");
+
+Console.WriteLine("Singleton (same instance everywhere):");
+var logger1 = serviceProvider.GetRequiredService<ILogger>();
+var logger2 = serviceProvider.GetRequiredService<ILogger>();
+Console.WriteLine($"  Same instance? {ReferenceEquals(logger1, logger2)}\n");
+
+// INTERVIEW ANSWER: Scoped means "one per scope." In ASP.NET Core, a scope
+// is typically one HTTP request. In a console app, you create scopes manually.
+// Within a scope, you always get the same instance. Different scopes get
+// different instances.
+Console.WriteLine("Scoped (same within scope, different across scopes):");
+using (var scope1 = serviceProvider.CreateScope())
+{
+    var repo1a = scope1.ServiceProvider.GetRequiredService<IUserRepository>();
+    var repo1b = scope1.ServiceProvider.GetRequiredService<IUserRepository>();
+    Console.WriteLine($"  Scope 1 — Same instance? {ReferenceEquals(repo1a, repo1b)}");
+}
+using (var scope2 = serviceProvider.CreateScope())
+{
+    var repo2 = scope2.ServiceProvider.GetRequiredService<IUserRepository>();
+    Console.WriteLine($"  Scope 2 — New instance created");
+}
+Console.WriteLine();
+
+Console.WriteLine("Transient (new instance every time):");
+using (var scope = serviceProvider.CreateScope())
+{
+    var email1 = scope.ServiceProvider.GetRequiredService<IEmailService>();
+    var email2 = scope.ServiceProvider.GetRequiredService<IEmailService>();
+    Console.WriteLine($"  Same instance? {ReferenceEquals(email1, email2)}\n");
+}
+
+// --- Using the registered services ---
+Console.WriteLine("--- Using Registered Services ---\n");
+
+using (var scope = serviceProvider.CreateScope())
+{
+    var registration = scope.ServiceProvider.GetRequiredService<UserRegistrationService>();
+
+    await registration.RegisterAsync("Alice Chen", "alice@example.com");
+    Console.WriteLine();
+    await registration.RegisterAsync("Bob Martinez", "bob@example.com");
+}
+
+Console.WriteLine();
+
+// --- Show that scoped state doesn't leak ---
+Console.WriteLine("--- Scoped State Isolation ---\n");
+
+Console.WriteLine("Scope A: Register users...");
+using (var scopeA = serviceProvider.CreateScope())
+{
+    var regA = scopeA.ServiceProvider.GetRequiredService<UserRegistrationService>();
+    await regA.RegisterAsync("Scope-A User", "a@test.com");
+    var repoA = scopeA.ServiceProvider.GetRequiredService<IUserRepository>();
+    var allA = await repoA.GetAllAsync();
+    Console.WriteLine($"  Scope A user count: {allA.Count}");
+}
+
+Console.WriteLine("\nScope B: Fresh repository (new scope)...");
+using (var scopeB = serviceProvider.CreateScope())
+{
+    var repoB = scopeB.ServiceProvider.GetRequiredService<IUserRepository>();
+    var allB = await repoB.GetAllAsync();
+    Console.WriteLine($"  Scope B user count: {allB.Count} (fresh — different scope!)");
+}
+
+// INTERVIEW ANSWER: Notice how Scope B has zero users even though Scope A
+// registered one. That's because IUserRepository is scoped — each scope gets
+// its own InMemoryUserRepository instance. In a web app, this means each HTTP
+// request gets its own DbContext, preventing data leaks between requests.
+
 // --- Interfaces (abstractions) ---
 
 public interface IUserRepository
@@ -141,108 +246,3 @@ public class UserRegistrationService
         return await _userRepo.GetByIdAsync(id);
     }
 }
-
-// ============================================================================
-// DEMO
-// ============================================================================
-
-Console.WriteLine("=== DEPENDENCY INJECTION DEMO ===\n");
-
-// --- Setting up the DI Container ---
-Console.WriteLine("--- Setting Up DI Container ---\n");
-
-// INTERVIEW ANSWER: The DI container manages object creation and lifetimes.
-// You register services with their interfaces, specifying the lifetime:
-// - Transient: new instance every time it's requested
-// - Scoped: one instance per scope (per request in web apps)
-// - Singleton: one instance for the entire application lifetime
-
-var services = new ServiceCollection();
-
-// Singleton — one instance shared everywhere
-services.AddSingleton<ILogger, ConsoleLogger>();
-
-// Scoped — one instance per scope (we'll create scopes manually)
-services.AddScoped<IUserRepository, InMemoryUserRepository>();
-
-// Transient — new instance every time
-services.AddTransient<IEmailService, ConsoleEmailService>();
-
-// Register the service itself
-services.AddScoped<UserRegistrationService>();
-
-var serviceProvider = services.BuildServiceProvider();
-
-// --- Demonstrate Lifetimes ---
-Console.WriteLine("\n--- Lifetime Differences ---\n");
-
-Console.WriteLine("Singleton (same instance everywhere):");
-var logger1 = serviceProvider.GetRequiredService<ILogger>();
-var logger2 = serviceProvider.GetRequiredService<ILogger>();
-Console.WriteLine($"  Same instance? {ReferenceEquals(logger1, logger2)}\n");
-
-// INTERVIEW ANSWER: Scoped means "one per scope." In ASP.NET Core, a scope
-// is typically one HTTP request. In a console app, you create scopes manually.
-// Within a scope, you always get the same instance. Different scopes get
-// different instances.
-Console.WriteLine("Scoped (same within scope, different across scopes):");
-using (var scope1 = serviceProvider.CreateScope())
-{
-    var repo1a = scope1.ServiceProvider.GetRequiredService<IUserRepository>();
-    var repo1b = scope1.ServiceProvider.GetRequiredService<IUserRepository>();
-    Console.WriteLine($"  Scope 1 — Same instance? {ReferenceEquals(repo1a, repo1b)}");
-}
-using (var scope2 = serviceProvider.CreateScope())
-{
-    var repo2 = scope2.ServiceProvider.GetRequiredService<IUserRepository>();
-    Console.WriteLine($"  Scope 2 — New instance created");
-}
-Console.WriteLine();
-
-Console.WriteLine("Transient (new instance every time):");
-using (var scope = serviceProvider.CreateScope())
-{
-    var email1 = scope.ServiceProvider.GetRequiredService<IEmailService>();
-    var email2 = scope.ServiceProvider.GetRequiredService<IEmailService>();
-    Console.WriteLine($"  Same instance? {ReferenceEquals(email1, email2)}\n");
-}
-
-// --- Using the registered services ---
-Console.WriteLine("--- Using Registered Services ---\n");
-
-using (var scope = serviceProvider.CreateScope())
-{
-    var registration = scope.ServiceProvider.GetRequiredService<UserRegistrationService>();
-
-    await registration.RegisterAsync("Alice Chen", "alice@example.com");
-    Console.WriteLine();
-    await registration.RegisterAsync("Bob Martinez", "bob@example.com");
-}
-
-Console.WriteLine();
-
-// --- Show that scoped state doesn't leak ---
-Console.WriteLine("--- Scoped State Isolation ---\n");
-
-Console.WriteLine("Scope A: Register users...");
-using (var scopeA = serviceProvider.CreateScope())
-{
-    var regA = scopeA.ServiceProvider.GetRequiredService<UserRegistrationService>();
-    await regA.RegisterAsync("Scope-A User", "a@test.com");
-    var repoA = scopeA.ServiceProvider.GetRequiredService<IUserRepository>();
-    var allA = await repoA.GetAllAsync();
-    Console.WriteLine($"  Scope A user count: {allA.Count}");
-}
-
-Console.WriteLine("\nScope B: Fresh repository (new scope)...");
-using (var scopeB = serviceProvider.CreateScope())
-{
-    var repoB = scopeB.ServiceProvider.GetRequiredService<IUserRepository>();
-    var allB = await repoB.GetAllAsync();
-    Console.WriteLine($"  Scope B user count: {allB.Count} (fresh — different scope!)");
-}
-
-// INTERVIEW ANSWER: Notice how Scope B has zero users even though Scope A
-// registered one. That's because IUserRepository is scoped — each scope gets
-// its own InMemoryUserRepository instance. In a web app, this means each HTTP
-// request gets its own DbContext, preventing data leaks between requests.

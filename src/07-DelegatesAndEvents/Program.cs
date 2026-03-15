@@ -10,112 +10,6 @@
 // enables loose coupling between publishers and subscribers.
 // ============================================================================
 
-// --- Custom delegate type ---
-
-// INTERVIEW ANSWER: You'd define a custom delegate when the built-in ones don't
-// clearly express your intent, or when you want a named type for documentation
-// purposes. In practice, most code uses Action/Func because they're more concise.
-public delegate bool RetryPolicy(int attemptNumber, Exception exception);
-
-// --- Event-based order processing system ---
-
-public class OrderEventArgs(string orderId, decimal amount, string status) : EventArgs
-{
-    public string OrderId { get; } = orderId;
-    public decimal Amount { get; } = amount;
-    public string Status { get; } = status;
-    public DateTime Timestamp { get; } = DateTime.UtcNow;
-}
-
-public class OrderProcessor
-{
-    // INTERVIEW ANSWER: Events use EventHandler<T> by convention. The `event`
-    // keyword restricts external code to only += and -= (subscribe/unsubscribe).
-    // Only the OrderProcessor itself can invoke (raise) these events. This
-    // prevents external code from faking events.
-    public event EventHandler<OrderEventArgs>? OrderReceived;
-    public event EventHandler<OrderEventArgs>? OrderProcessed;
-    public event EventHandler<OrderEventArgs>? OrderFailed;
-
-    public async Task ProcessOrderAsync(string orderId, decimal amount)
-    {
-        Console.WriteLine($"\n  Processing order {orderId} for {amount:C}...");
-
-        // Raise OrderReceived
-        OrderReceived?.Invoke(this, new OrderEventArgs(orderId, amount, "Received"));
-
-        await Task.Delay(50); // Simulate processing
-
-        if (amount > 10_000m)
-        {
-            OrderFailed?.Invoke(this, new OrderEventArgs(orderId, amount, "Amount exceeds limit"));
-            return;
-        }
-
-        OrderProcessed?.Invoke(this, new OrderEventArgs(orderId, amount, "Completed"));
-    }
-}
-
-// --- Subscribers ---
-
-public class AuditLogger
-{
-    public void OnOrderEvent(object? sender, OrderEventArgs e) =>
-        Console.WriteLine($"  [Audit] Order {e.OrderId}: {e.Status} at {e.Timestamp:HH:mm:ss.fff}");
-}
-
-public class NotificationService
-{
-    public void OnOrderProcessed(object? sender, OrderEventArgs e) =>
-        Console.WriteLine($"  [Notify] Order {e.OrderId} completed — notifying customer");
-
-    public void OnOrderFailed(object? sender, OrderEventArgs e) =>
-        Console.WriteLine($"  [Notify] Order {e.OrderId} FAILED: {e.Status} — alerting support");
-}
-
-// --- Multicast delegates ---
-
-// INTERVIEW ANSWER: Delegates in C# are multicast — you can combine multiple
-// methods into a single delegate using +=. When you invoke it, all subscribed
-// methods are called in order. Events are built on this mechanism.
-public class MetricsCollector
-{
-    public void OnOrderReceived(object? sender, OrderEventArgs e) =>
-        Console.WriteLine($"  [Metrics] Received: {e.OrderId}, Amount: {e.Amount:C}");
-}
-
-// --- Pipeline using Func/Action ---
-
-// INTERVIEW ANSWER: One of the most powerful uses of delegates is building
-// pipelines — chains of transformations where each step is a function. This
-// is the same concept behind middleware in ASP.NET Core.
-public class RequestPipeline<T>
-{
-    private readonly List<Func<T, T>> _steps = [];
-
-    public RequestPipeline<T> Use(Func<T, T> step)
-    {
-        _steps.Add(step);
-        return this;
-    }
-
-    public T Execute(T input)
-    {
-        var current = input;
-        foreach (var step in _steps)
-        {
-            current = step(current);
-        }
-        return current;
-    }
-}
-
-public record HttpRequest(string Path, Dictionary<string, string> Headers, string Body)
-{
-    public override string ToString() =>
-        $"Path: {Path}, Headers: [{string.Join(", ", Headers.Select(h => $"{h.Key}={h.Value}"))}], Body: {Body}";
-}
-
 // ============================================================================
 // DEMO
 // ============================================================================
@@ -237,3 +131,109 @@ var request = new HttpRequest("/API/Users/", new Dictionary<string, string>(), "
 Console.WriteLine($"  Input:  {request}");
 var result = pipeline.Execute(request);
 Console.WriteLine($"  Output: {result}");
+
+// --- Custom delegate type ---
+
+// INTERVIEW ANSWER: You'd define a custom delegate when the built-in ones don't
+// clearly express your intent, or when you want a named type for documentation
+// purposes. In practice, most code uses Action/Func because they're more concise.
+public delegate bool RetryPolicy(int attemptNumber, Exception exception);
+
+// --- Event-based order processing system ---
+
+public class OrderEventArgs(string orderId, decimal amount, string status) : EventArgs
+{
+    public string OrderId { get; } = orderId;
+    public decimal Amount { get; } = amount;
+    public string Status { get; } = status;
+    public DateTime Timestamp { get; } = DateTime.UtcNow;
+}
+
+public class OrderProcessor
+{
+    // INTERVIEW ANSWER: Events use EventHandler<T> by convention. The `event`
+    // keyword restricts external code to only += and -= (subscribe/unsubscribe).
+    // Only the OrderProcessor itself can invoke (raise) these events. This
+    // prevents external code from faking events.
+    public event EventHandler<OrderEventArgs>? OrderReceived;
+    public event EventHandler<OrderEventArgs>? OrderProcessed;
+    public event EventHandler<OrderEventArgs>? OrderFailed;
+
+    public async Task ProcessOrderAsync(string orderId, decimal amount)
+    {
+        Console.WriteLine($"\n  Processing order {orderId} for {amount:C}...");
+
+        // Raise OrderReceived
+        OrderReceived?.Invoke(this, new OrderEventArgs(orderId, amount, "Received"));
+
+        await Task.Delay(50); // Simulate processing
+
+        if (amount > 10_000m)
+        {
+            OrderFailed?.Invoke(this, new OrderEventArgs(orderId, amount, "Amount exceeds limit"));
+            return;
+        }
+
+        OrderProcessed?.Invoke(this, new OrderEventArgs(orderId, amount, "Completed"));
+    }
+}
+
+// --- Subscribers ---
+
+public class AuditLogger
+{
+    public void OnOrderEvent(object? sender, OrderEventArgs e) =>
+        Console.WriteLine($"  [Audit] Order {e.OrderId}: {e.Status} at {e.Timestamp:HH:mm:ss.fff}");
+}
+
+public class NotificationService
+{
+    public void OnOrderProcessed(object? sender, OrderEventArgs e) =>
+        Console.WriteLine($"  [Notify] Order {e.OrderId} completed — notifying customer");
+
+    public void OnOrderFailed(object? sender, OrderEventArgs e) =>
+        Console.WriteLine($"  [Notify] Order {e.OrderId} FAILED: {e.Status} — alerting support");
+}
+
+// --- Multicast delegates ---
+
+// INTERVIEW ANSWER: Delegates in C# are multicast — you can combine multiple
+// methods into a single delegate using +=. When you invoke it, all subscribed
+// methods are called in order. Events are built on this mechanism.
+public class MetricsCollector
+{
+    public void OnOrderReceived(object? sender, OrderEventArgs e) =>
+        Console.WriteLine($"  [Metrics] Received: {e.OrderId}, Amount: {e.Amount:C}");
+}
+
+// --- Pipeline using Func/Action ---
+
+// INTERVIEW ANSWER: One of the most powerful uses of delegates is building
+// pipelines — chains of transformations where each step is a function. This
+// is the same concept behind middleware in ASP.NET Core.
+public class RequestPipeline<T>
+{
+    private readonly List<Func<T, T>> _steps = [];
+
+    public RequestPipeline<T> Use(Func<T, T> step)
+    {
+        _steps.Add(step);
+        return this;
+    }
+
+    public T Execute(T input)
+    {
+        var current = input;
+        foreach (var step in _steps)
+        {
+            current = step(current);
+        }
+        return current;
+    }
+}
+
+public record HttpRequest(string Path, Dictionary<string, string> Headers, string Body)
+{
+    public override string ToString() =>
+        $"Path: {Path}, Headers: [{string.Join(", ", Headers.Select(h => $"{h.Key}={h.Value}"))}], Body: {Body}";
+}

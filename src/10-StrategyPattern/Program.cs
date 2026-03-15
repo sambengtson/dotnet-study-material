@@ -9,6 +9,66 @@
 // Open/Closed principle: you can add new strategies without modifying existing code.
 // ============================================================================
 
+// ============================================================================
+// DEMO
+// ============================================================================
+
+Console.WriteLine("=== STRATEGY PATTERN DEMO ===\n");
+
+var customer = new CustomerProfile("C-001", "Alice Chen", "Gold", 47, 12_500m);
+Console.WriteLine($"Customer: {customer.Name} (Tier: {customer.Tier}, " +
+                  $"Orders: {customer.TotalOrders}, Lifetime: {customer.LifetimeSpend:C})\n");
+
+// --- Standard Pricing ---
+Console.WriteLine("--- Standard Pricing ---");
+var cart = new ShoppingCart(new StandardPricing());
+cart.AddItem("Widget Pro", 29.99m, 5);
+cart.AddItem("Gadget Plus", 49.99m, 2);
+var total = cart.CalculateTotal(customer);
+Console.WriteLine($"  Total: {total:C}\n");
+
+// --- Switch to Bulk Pricing at Runtime ---
+Console.WriteLine("--- Bulk Discount Pricing (runtime swap) ---");
+cart.SetPricingStrategy(new BulkDiscountPricing());
+total = cart.CalculateTotal(customer);
+Console.WriteLine($"  Total: {total:C}\n");
+
+// --- Loyalty Pricing ---
+Console.WriteLine("--- Loyalty Pricing ---");
+cart.SetPricingStrategy(new LoyaltyPricing());
+total = cart.CalculateTotal(customer);
+Console.WriteLine($"  Total: {total:C}\n");
+
+// --- Promotional Pricing ---
+Console.WriteLine("--- Promotional Pricing (SUMMER25) ---");
+cart.SetPricingStrategy(new PromotionalPricing("SUMMER25", 0.25m));
+total = cart.CalculateTotal(customer);
+Console.WriteLine($"  Total: {total:C}\n");
+
+// --- Factory-based Strategy Selection ---
+Console.WriteLine("--- Factory-based Strategy Selection ---\n");
+
+var customers = new[]
+{
+    new CustomerProfile("C-002", "Bob (New)", "Bronze", 2, 150m),
+    new CustomerProfile("C-003", "Carol (VIP)", "Platinum", 100, 25_000m),
+    new CustomerProfile("C-004", "Dave (Promo)", "Silver", 10, 800m),
+};
+
+string?[] promoCodes = [null, null, "FLASH50"];
+
+for (int i = 0; i < customers.Length; i++)
+{
+    var c = customers[i];
+    var strategy = PricingStrategyFactory.Create(c, promoCodes[i]);
+    Console.WriteLine($"  {c.Name}: Strategy = {strategy.Name}");
+
+    var testCart = new ShoppingCart(strategy);
+    testCart.AddItem("Test Item", 100m, 1);
+    var t = testCart.CalculateTotal(c);
+    Console.WriteLine($"  {c.Name} pays: {t:C}\n");
+}
+
 // --- Strategy interface ---
 
 public interface IPricingStrategy
@@ -166,64 +226,4 @@ public static class PricingStrategyFactory
 
         return new StandardPricing();
     }
-}
-
-// ============================================================================
-// DEMO
-// ============================================================================
-
-Console.WriteLine("=== STRATEGY PATTERN DEMO ===\n");
-
-var customer = new CustomerProfile("C-001", "Alice Chen", "Gold", 47, 12_500m);
-Console.WriteLine($"Customer: {customer.Name} (Tier: {customer.Tier}, " +
-                  $"Orders: {customer.TotalOrders}, Lifetime: {customer.LifetimeSpend:C})\n");
-
-// --- Standard Pricing ---
-Console.WriteLine("--- Standard Pricing ---");
-var cart = new ShoppingCart(new StandardPricing());
-cart.AddItem("Widget Pro", 29.99m, 5);
-cart.AddItem("Gadget Plus", 49.99m, 2);
-var total = cart.CalculateTotal(customer);
-Console.WriteLine($"  Total: {total:C}\n");
-
-// --- Switch to Bulk Pricing at Runtime ---
-Console.WriteLine("--- Bulk Discount Pricing (runtime swap) ---");
-cart.SetPricingStrategy(new BulkDiscountPricing());
-total = cart.CalculateTotal(customer);
-Console.WriteLine($"  Total: {total:C}\n");
-
-// --- Loyalty Pricing ---
-Console.WriteLine("--- Loyalty Pricing ---");
-cart.SetPricingStrategy(new LoyaltyPricing());
-total = cart.CalculateTotal(customer);
-Console.WriteLine($"  Total: {total:C}\n");
-
-// --- Promotional Pricing ---
-Console.WriteLine("--- Promotional Pricing (SUMMER25) ---");
-cart.SetPricingStrategy(new PromotionalPricing("SUMMER25", 0.25m));
-total = cart.CalculateTotal(customer);
-Console.WriteLine($"  Total: {total:C}\n");
-
-// --- Factory-based Strategy Selection ---
-Console.WriteLine("--- Factory-based Strategy Selection ---\n");
-
-var customers = new[]
-{
-    new CustomerProfile("C-002", "Bob (New)", "Bronze", 2, 150m),
-    new CustomerProfile("C-003", "Carol (VIP)", "Platinum", 100, 25_000m),
-    new CustomerProfile("C-004", "Dave (Promo)", "Silver", 10, 800m),
-};
-
-string?[] promoCodes = [null, null, "FLASH50"];
-
-for (int i = 0; i < customers.Length; i++)
-{
-    var c = customers[i];
-    var strategy = PricingStrategyFactory.Create(c, promoCodes[i]);
-    Console.WriteLine($"  {c.Name}: Strategy = {strategy.Name}");
-
-    var testCart = new ShoppingCart(strategy);
-    testCart.AddItem("Test Item", 100m, 1);
-    var t = testCart.CalculateTotal(c);
-    Console.WriteLine($"  {c.Name} pays: {t:C}\n");
 }

@@ -10,6 +10,54 @@
 // what you want, and they coordinate all the details with different departments.
 // ============================================================================
 
+// ============================================================================
+// DEMO
+// ============================================================================
+
+Console.WriteLine("=== FACADE PATTERN DEMO ===\n");
+
+// Create subsystems
+var inventory = new InventoryService();
+var payment = new PaymentService();
+var shipping = new ShippingService();
+var notification = new NotificationService();
+var tax = new TaxCalculator();
+
+// Create facade
+var orderFacade = new OrderFacade(inventory, payment, shipping, notification, tax);
+
+// --- Successful order (one simple call hides all complexity) ---
+Console.WriteLine("--- Successful Order ---");
+var result = orderFacade.PlaceOrder(new OrderRequest(
+    CustomerId: "CUST-100",
+    CustomerEmail: "alice@example.com",
+    Sku: "SKU-001",
+    Quantity: 5,
+    UnitPrice: 29.99m,
+    ShippingAddress: new ShippingAddress("123 Main St", "San Francisco", "CA", "94105"),
+    ShippingMethod: "express",
+    PaymentMethod: "credit_card"));
+
+Console.WriteLine($"  Order Result: {(result.Success ? "SUCCESS" : "FAILED")}");
+if (result.Success)
+    Console.WriteLine($"  Order: {result.OrderId}, Tracking: {result.TrackingNumber}, Total: {result.Total:C}");
+
+// --- Failed order (out of stock) ---
+Console.WriteLine("\n--- Out of Stock Order ---");
+var failedResult = orderFacade.PlaceOrder(new OrderRequest(
+    CustomerId: "CUST-200",
+    CustomerEmail: "bob@example.com",
+    Sku: "SKU-003",
+    Quantity: 1,
+    UnitPrice: 49.99m,
+    ShippingAddress: new ShippingAddress("456 Oak Ave", "Portland", "OR", "97201"),
+    ShippingMethod: "standard",
+    PaymentMethod: "debit_card"));
+
+Console.WriteLine($"  Order Result: {(failedResult.Success ? "SUCCESS" : "FAILED")}");
+if (!failedResult.Success)
+    Console.WriteLine($"  Reason: {failedResult.ErrorMessage}");
+
 // --- Complex subsystem classes ---
 
 // INTERVIEW ANSWER: These subsystem classes have complex interfaces and
@@ -210,51 +258,3 @@ public class OrderResult
     public static OrderResult Failure(string error) =>
         new() { Success = false, ErrorMessage = error };
 }
-
-// ============================================================================
-// DEMO
-// ============================================================================
-
-Console.WriteLine("=== FACADE PATTERN DEMO ===\n");
-
-// Create subsystems
-var inventory = new InventoryService();
-var payment = new PaymentService();
-var shipping = new ShippingService();
-var notification = new NotificationService();
-var tax = new TaxCalculator();
-
-// Create facade
-var orderFacade = new OrderFacade(inventory, payment, shipping, notification, tax);
-
-// --- Successful order (one simple call hides all complexity) ---
-Console.WriteLine("--- Successful Order ---");
-var result = orderFacade.PlaceOrder(new OrderRequest(
-    CustomerId: "CUST-100",
-    CustomerEmail: "alice@example.com",
-    Sku: "SKU-001",
-    Quantity: 5,
-    UnitPrice: 29.99m,
-    ShippingAddress: new ShippingAddress("123 Main St", "San Francisco", "CA", "94105"),
-    ShippingMethod: "express",
-    PaymentMethod: "credit_card"));
-
-Console.WriteLine($"  Order Result: {(result.Success ? "SUCCESS" : "FAILED")}");
-if (result.Success)
-    Console.WriteLine($"  Order: {result.OrderId}, Tracking: {result.TrackingNumber}, Total: {result.Total:C}");
-
-// --- Failed order (out of stock) ---
-Console.WriteLine("\n--- Out of Stock Order ---");
-var failedResult = orderFacade.PlaceOrder(new OrderRequest(
-    CustomerId: "CUST-200",
-    CustomerEmail: "bob@example.com",
-    Sku: "SKU-003",
-    Quantity: 1,
-    UnitPrice: 49.99m,
-    ShippingAddress: new ShippingAddress("456 Oak Ave", "Portland", "OR", "97201"),
-    ShippingMethod: "standard",
-    PaymentMethod: "debit_card"));
-
-Console.WriteLine($"  Order Result: {(failedResult.Success ? "SUCCESS" : "FAILED")}");
-if (!failedResult.Success)
-    Console.WriteLine($"  Reason: {failedResult.ErrorMessage}");
