@@ -1,6 +1,6 @@
 # .NET Study Material
 
-A collection of 30 self-contained C# console applications designed to help experienced engineers practice articulating fundamental programming concepts for interviews. Each project pairs runnable code examples with clear "interview answer" explanations.
+A collection of 31 self-contained C# console applications designed to help experienced engineers practice articulating fundamental programming concepts for interviews. Each project pairs runnable code examples with clear "interview answer" explanations.
 
 **Target Framework:** .NET 10 Preview (`net10.0`)
 
@@ -52,6 +52,8 @@ dotnet run --project src/01-Inheritance
 | 28 | [Command Pattern](src/28-CommandPattern/) | Encapsulated requests, undo/redo, command queue, macro commands |
 | 29 | [State Pattern](src/29-StatePattern/) | State-dependent behavior, finite state machines, explicit transitions |
 | 30 | [Template Method Pattern](src/30-TemplateMethodPattern/) | Algorithm skeleton in base class, hook methods, enforced structure |
+| 31 | [EF Core Global Query Filters](src/31-EFCoreGlobalQueryFilters/) | Soft-delete pattern, multi-tenancy, HasQueryFilter, IgnoreQueryFilters |
+| 32 | [MCP Prompt Injection](src/32-McpPromptInjection/) | Tool poisoning, indirect injection, data/instruction separation, human-in-the-loop |
 
 ## Prerequisites
 
